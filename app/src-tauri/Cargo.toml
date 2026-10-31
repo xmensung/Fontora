@@ -1,0 +1,46 @@
+[package]
+name = "fontora"
+version = "0.8.1"
+description = "Fontora — a clean font manager: preview, tag, organize, activate/deactivate and install fonts"
+authors = ["TheHolyOneZ"]
+license = "GPL-3.0-only"
+homepage = "https://zsync.eu/zfontmanager/"
+repository = "https://github.com/TheHolyOneZ/ZFontManager"
+edition = "2021"
+# The crate also ships the `cjk_report` helper binary; point Tauri at the app.
+default-run = "fontora"
+
+[lib]
+name = "fontora_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = ["protocol-asset", "tray-icon", "image-png"] }
+tauri-plugin-opener = "2"
+tauri-plugin-dialog = "2"
+tauri-plugin-fs = "2"
+tauri-plugin-autostart = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+ttf-parser = "0.25"
+walkdir = "2"
+dirs = "6"
+trash = "5"
+zip = { version = "2", default-features = false, features = ["deflate"] }
+thiserror = "2"
+notify = "7"
+rodio = { version = "0.19", default-features = false }
+reqwest = { version = "0.13.5", default-features = false, features = ["json", "stream", "rustls"] }
+sysinfo = "0.38.4"
+tokio = { version = "1.53.1", features = ["time", "rt"] }
+rusqlite = { version = "0.40.2", features = ["bundled"] }
+sha2 = "0.11.1"
+# 子集化导出用：WOFF 用 zlib，WOFF2 用 brotli。都是纯 Rust，静态链进 exe。
+flate2 = "1"
+brotli = "9"
+
+[target.'cfg(windows)'.dependencies]
+windows-sys = { version = "0.59", features = ["Win32_Graphics_Gdi", "Win32_UI_WindowsAndMessaging", "Win32_System_Registry", "Win32_Foundation", "Win32_System_SystemInformation"] }

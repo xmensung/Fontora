@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="utf-8">
+<title>导出面板预览</title>
+<link rel="stylesheet" href="../src/design/tokens.css">
+<link rel="stylesheet" href="../src/app.css">
+<style>
+  html, body { margin: 0; height: 100%; }
+  body { background: var(--canvas); font-family: var(--font-ui); color: var(--text-primary); }
+  #root { position: relative; height: 100vh; display: flex; }
+  .side-gap { width: 236px; flex-shrink: 0; border-right: 1px solid var(--e2); }
+  .app-content { flex: 1; min-height: 0; position: relative; }
+  .fd-mono { font-family: var(--font-mono); }
+  .tabular { font-variant-numeric: tabular-nums; }
+  .ghost { padding: 40px; color: var(--text-disabled); font-size: 13px; }
+</style>
+</head>
+<body>
+<div id="root">
+  <div class="side-gap"></div>
+  <main class="app-content">
+    <div class="ghost">（详情页内容）</div>
+
+    <div class="exp-backdrop">
+      <div class="exp-panel">
+        <header class="exp-head">
+          <div class="exp-head-text">
+            <span class="exp-title">导出字体</span>
+            <span class="exp-sub">微软雅黑 Regular · TTC · 集合内共 4 个字重</span>
+          </div>
+          <button class="fd-icon-btn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+        </header>
+
+        <div class="exp-body">
+          <section class="exp-block">
+            <div class="exp-block-head">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M14 3v5h5"/><path d="M19 8v11a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7Z"/><path d="M12 11v6"/><path d="m9.5 14.5 2.5 2.5 2.5-2.5"/></svg>
+              字体文件
+            </div>
+            <p class="exp-note">直接把字重从文件里拆出来另存；集合（TTC/OTC）会真正拆成独立文件。</p>
+            <div class="exp-actions">
+              <button class="exp-btn primary">导出此字重</button>
+              <button class="exp-btn">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 3 3 8l9 5 9-5-9-5Z"/><path d="m3 14 9 5 9-5"/></svg>
+                拆包全部 4 个
+              </button>
+              <button class="exp-btn on">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+                改内部命名
+              </button>
+            </div>
+
+            <div class="exp-rename">
+              <label class="exp-field"><span>字体家族名</span><input value="微软雅黑"></label>
+              <label class="exp-field"><span>字重 / 样式</span><input value="Regular"></label>
+              <button class="exp-btn primary">按新名字导出</button>
+              <p class="exp-note">只重写字体内部的名字（家族名、全名、PostScript 名），版权与授权信息原样保留。中文族名无法当 PostScript 名时会沿用原值。</p>
+            </div>
+          </section>
+
+          <section class="exp-block">
+            <div class="exp-block-head">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3a15 15 0 0 1 0 18a15 15 0 0 1 0-18Z"/></svg>
+              网页字体（子集化）
+            </div>
+            <p class="exp-note">裁掉用不到的字符再压缩，体积通常能降到十分之一以下。仅支持 TrueType 轮廓的字体。</p>
+            <div class="exp-chips">
+              <button class="exp-chip">西文</button>
+              <button class="exp-chip on">简体常用</button>
+              <button class="exp-chip">大字符集</button>
+              <button class="exp-chip">自定义文本</button>
+              <button class="exp-chip">全部字符</button>
+            </div>
+            <div class="exp-chips">
+              <button class="exp-chip on">WOFF2</button>
+              <button class="exp-chip">WOFF</button>
+              <button class="exp-chip">TTF</button>
+            </div>
+            <div class="exp-actions">
+              <button class="exp-btn primary">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
+                导出 WOFF2
+              </button>
+            </div>
+          </section>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+</body>
+</html>

@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="utf-8">
+<title>自动归档预览</title>
+<link rel="stylesheet" href="../src/design/tokens.css">
+<link rel="stylesheet" href="../src/app.css">
+<style>
+  html, body { margin: 0; height: 100%; }
+  body { background: var(--canvas); font-family: var(--font-ui); color: var(--text-primary); }
+  #root { position: relative; height: 100vh; display: flex; }
+  .side-gap { width: 236px; flex-shrink: 0; border-right: 1px solid var(--e2); }
+  .app-content { flex: 1; min-height: 0; position: relative; overflow: hidden; }
+</style>
+</head>
+<body>
+<div id="root">
+  <div class="side-gap"></div>
+  <main class="app-content">
+    <div class="ref-view">
+      <div class="ref-inner">
+        <header class="ref-head">
+          <div class="ref-head-text">
+            <h1 class="ref-title">自动归档</h1>
+            <p class="ref-sub">按规则把字体文件分进子文件夹。先看方案，确认之后才动文件。</p>
+          </div>
+          <div class="ref-head-actions">
+            <button class="ref-btn">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M21 12a9 9 0 11-3-6.7M21 4v5h-5"/></svg>
+              重置
+            </button>
+          </div>
+        </header>
+
+        <div class="ref-body">
+          <section class="og-card">
+            <div class="og-step"><span class="og-step-index">1</span>按什么分</div>
+            <div class="og-chips">
+              <button class="og-chip og-chip-on">厂商</button>
+              <button class="og-chip">语言</button>
+              <button class="og-chip">格式</button>
+              <button class="og-chip">分类</button>
+            </div>
+            <p class="us-hint">用字体自带的厂商名。没有厂商信息的会归到 Unknown。</p>
+
+            <div class="og-step"><span class="og-step-index">2</span>放到哪里</div>
+            <div class="og-dest">
+              <input class="og-input fd-mono" value="C:\Users\Hex\AppData\Local\Microsoft\Windows\Fonts\归档">
+              <button class="ref-btn">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 7h5l2 2h11v9a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
+                选择文件夹
+              </button>
+            </div>
+
+            <div class="og-step"><span class="og-step-index">3</span>怎么放</div>
+            <div class="og-chips">
+              <button class="og-chip og-chip-on">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 012-2h10"/></svg>
+                复制
+              </button>
+              <button class="og-chip og-chip-warn">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 7h5l2 2h11v9a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><path d="M12 12v5M9.5 14.5L12 17l2.5-2.5"/></svg>
+                移动
+              </button>
+              <button class="og-chip">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M9 12h6M10 8H7a4 4 0 000 8h3M14 8h3a4 4 0 010 8h-3"/></svg>
+                硬链接
+              </button>
+            </div>
+            <p class="us-hint">源文件留在原处，归档目录里多一份。占地方，但随时能反悔。</p>
+          </section>
+
+          <div class="ref-stats">
+            <div class="ref-stat primary"><span class="ref-stat-value tabular">72</span><span class="ref-stat-label">要处理的文件</span></div>
+            <div class="ref-stat"><span class="ref-stat-value tabular">6</span><span class="ref-stat-label">目标文件夹</span></div>
+            <div class="ref-stat"><span class="ref-stat-value tabular">318.4 MB</span><span class="ref-stat-label">总大小</span></div>
+            <div class="ref-stat"><span class="ref-stat-value tabular">54</span><span class="ref-stat-label">跳过</span></div>
+            <div class="ref-stat dim"><span class="ref-stat-value tabular">3</span><span class="ref-stat-label">重名改名</span></div>
+          </div>
+
+          <div class="og-folders">
+            <div class="og-folder"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 7h5l2 2h11v9a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><span class="og-folder-name">Adobe</span><span class="og-folder-count tabular">18</span></div>
+            <div class="og-folder"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 7h5l2 2h11v9a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><span class="og-folder-name">Google</span><span class="og-folder-count tabular">14</span></div>
+            <div class="og-folder"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 7h5l2 2h11v9a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><span class="og-folder-name">Founder</span><span class="og-folder-count tabular">12</span></div>
+            <div class="og-folder"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 7h5l2 2h11v9a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><span class="og-folder-name">Unknown</span><span class="og-folder-count tabular">16</span></div>
+            <div class="og-folder"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 7h5l2 2h11v9a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><span class="og-folder-name">Monotype</span><span class="og-folder-count tabular">8</span></div>
+            <div class="og-folder"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 7h5l2 2h11v9a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><span class="og-folder-name">Sandoll</span><span class="og-folder-count tabular">4</span></div>
+          </div>
+
+          <section class="ref-section">
+            <div class="ref-section-head">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12l5 5L20 6"/></svg>
+              文件去向（72）
+            </div>
+            <div class="og-list">
+              <div class="og-row"><span class="og-row-folder">Adobe</span><span class="og-row-file">SourceSerif4-Regular.otf</span><span class="og-row-arrow">→</span><span class="og-row-target fd-mono">Adobe\SourceSerif4-Regular.otf</span></div>
+              <div class="og-row"><span class="og-row-folder">Adobe</span><span class="og-row-file">SourceSerif4-Bold.otf</span><span class="og-row-arrow">→</span><span class="og-row-target fd-mono">Adobe\SourceSerif4-Bold.otf</span></div>
+              <div class="og-row"><span class="og-row-folder">Google</span><span class="og-row-file">Inter-Variable.ttf</span><span class="og-row-arrow">→</span><span class="og-row-target fd-mono">Google\Inter-Variable.ttf</span></div>
+              <div class="og-row"><span class="og-row-folder">Founder</span><span class="og-row-file">FZLanTingHei-R-GBK.ttf</span><span class="og-row-arrow">→</span><span class="og-row-target fd-mono">Founder\FZLanTingHei-R-GBK.ttf</span></div>
+              <div class="og-row"><span class="og-row-folder">Unknown</span><span class="og-row-file">仓耳今楷05.ttf</span><span class="og-row-arrow">→</span><span class="og-row-target fd-mono">Unknown\仓耳今楷05.ttf</span></div>
+              <div class="og-row"><span class="og-row-folder">Adobe</span><span class="og-row-file">思源宋体.ttc</span><span class="og-row-arrow">→</span><span class="og-row-target fd-mono">Adobe\思源宋体 (2).ttc</span></div>
+            </div>
+          </section>
+
+          <section class="ref-section">
+            <div class="ref-section-head">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3l9 17H3z"/><path d="M12 9v5M12 17h.01"/></svg>
+              这些不动，及原因
+            </div>
+            <div class="og-skips">
+              <div class="og-skip"><span>系统字体，不动</span><span class="tabular">48</span></div>
+              <div class="og-skip"><span>正在启用，先停用再移动</span><span class="tabular">4</span></div>
+              <div class="og-skip"><span>已经在这个位置</span><span class="tabular">2</span></div>
+            </div>
+          </section>
+
+          <div class="og-run">
+            <button class="ref-btn primary og-run-btn">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 3v11m0 0l-4-4m4 4l4-4M4 19h16"/></svg>
+              开始复制（72）
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+</body>
+</html>

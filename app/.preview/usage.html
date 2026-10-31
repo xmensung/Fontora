@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="utf-8">
+<title>使用统计预览</title>
+<link rel="stylesheet" href="../src/design/tokens.css">
+<link rel="stylesheet" href="../src/app.css">
+<style>
+  html, body { margin: 0; height: 100%; }
+  body { background: var(--canvas); font-family: var(--font-ui); color: var(--text-primary); }
+  #root { position: relative; height: 100vh; display: flex; }
+  .side-gap { width: 236px; flex-shrink: 0; border-right: 1px solid var(--e2); }
+  .app-content { flex: 1; min-height: 0; position: relative; overflow: hidden; }
+</style>
+</head>
+<body>
+<div id="root">
+  <div class="side-gap"></div>
+  <main class="app-content">
+    <div class="ref-view">
+      <div class="ref-inner">
+        <header class="ref-head">
+          <div class="ref-head-text">
+            <h1 class="ref-title">使用统计</h1>
+            <p class="ref-sub">打开过、装过、被项目引用过，都记在这里。没有记录不代表没用过，只代表装好之后没在这台机器上被点开过。</p>
+          </div>
+          <div class="ref-head-actions">
+            <button class="ref-btn">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 20h16M9 20V9M15 20V4M4 4l5 5"/></svg>
+              清空统计
+            </button>
+          </div>
+        </header>
+
+        <div class="ref-body">
+          <div class="ref-stats">
+            <div class="ref-stat"><span class="ref-stat-value tabular">126</span><span class="ref-stat-label">库里的家族</span></div>
+            <div class="ref-stat primary"><span class="ref-stat-value tabular">38</span><span class="ref-stat-label">有记录</span></div>
+            <div class="ref-stat"><span class="ref-stat-value tabular">11</span><span class="ref-stat-label">近 7 天</span></div>
+            <div class="ref-stat"><span class="ref-stat-value tabular">88</span><span class="ref-stat-label">从没打开</span></div>
+            <div class="ref-stat dim"><span class="ref-stat-value tabular">412.6 MB</span><span class="ref-stat-label">没打开占的空间</span></div>
+          </div>
+
+          <section class="ref-section">
+            <div class="ref-section-head">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+              最近用过
+            </div>
+            <p class="us-hint">按最后一次露面排序。点一行直接进详情页。</p>
+            <div class="us-list">
+              <button class="us-row"><span class="us-name">思源宋体</span><span class="us-counts"><span class="us-count">看 14</span><span class="us-count">装 2</span><span class="us-count us-ref">引 23</span></span><span class="us-when tabular">刚刚</span></button>
+              <button class="us-row"><span class="us-name">思源黑体</span><span class="us-counts"><span class="us-count">看 9</span><span class="us-count us-ref">引 17</span></span><span class="us-when tabular">12 分钟前</span></button>
+              <button class="us-row"><span class="us-name">Source Han Serif SC</span><span class="us-counts"><span class="us-count">看 6</span><span class="us-count">装 1</span></span><span class="us-when tabular">3 小时前</span></button>
+              <button class="us-row"><span class="us-name">JetBrains Mono</span><span class="us-counts"><span class="us-count">看 5</span><span class="us-count us-ref">引 4</span></span><span class="us-when tabular">2 天前</span></button>
+              <button class="us-row"><span class="us-name">方正兰亭黑</span><span class="us-counts"><span class="us-count">看 3</span></span><span class="us-when tabular">9 天前</span></button>
+              <button class="us-row"><span class="us-name">HarmonyOS Sans SC</span><span class="us-counts"><span class="us-count">看 2</span><span class="us-count">装 1</span></span><span class="us-when tabular">2026-06-14</span></button>
+            </div>
+          </section>
+
+          <section class="ref-section">
+            <div class="ref-section-head">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 3l18 18"/><path d="M10.6 10.6A3 3 0 0014 14"/><path d="M9.4 5.6A9 9 0 0112 5c5 0 9 4.5 9 7 0 .8-.4 1.7-1.2 2.6"/></svg>
+              从没打开过（88）
+            </div>
+            <p class="us-hint">按体积从大到小。这些不一定没用 —— 系统字体你没点过，也会一直在这儿。</p>
+            <div class="us-list">
+              <button class="us-row"><span class="us-name">方正小标宋简体</span><span class="us-counts"></span><span class="us-when tabular">没有记录</span></button>
+              <button class="us-row"><span class="us-name">华文行楷</span><span class="us-counts"></span><span class="us-when tabular">没有记录</span></button>
+              <button class="us-row"><span class="us-name">TsangerYuYangT W03</span><span class="us-counts"></span><span class="us-when tabular">没有记录</span></button>
+              <button class="us-row"><span class="us-name">仓耳今楷 05</span><span class="us-counts"></span><span class="us-when tabular">没有记录</span></button>
+            </div>
+            <button class="us-more">显示全部 88 款</button>
+          </section>
+
+          <section class="ref-section">
+            <div class="ref-section-head">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3l2.2 5.8L20 11l-5.8 2.2L12 19l-2.2-5.8L4 11l5.8-2.2z"/></svg>
+              可以清一清
+            </div>
+            <p class="us-hint">90 天没露面、没收藏、不在任何集合里、单款超过 1MB。</p>
+            <div class="us-clean">
+              <div class="us-clean-text"><strong class="tabular">24</strong>款字体符合条件，共<span class="us-clean-bytes tabular">186.3 MB</span></div>
+              <button class="ref-btn">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg>
+                全部放进「待清理」
+              </button>
+            </div>
+            <p class="us-hint dim">只建集合，不动文件。进去看一遍再决定删哪些。</p>
+          </section>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+</body>
+</html>

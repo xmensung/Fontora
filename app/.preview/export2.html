@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="utf-8">
+<title>导出面板预览</title>
+<link rel="stylesheet" href="../src/design/tokens.css">
+<link rel="stylesheet" href="../src/app.css">
+<style>
+  html, body { margin: 0; height: 100%; }
+  body { background: var(--canvas); font-family: var(--font-ui); color: var(--text-primary); }
+  #root { position: relative; height: 100vh; display: flex; }
+  .side-gap { width: 236px; flex-shrink: 0; border-right: 1px solid var(--e2); }
+  .app-content { flex: 1; min-height: 0; position: relative; }
+  .ghost { padding: 40px; color: var(--text-disabled); font-size: 13px; }
+</style>
+</head>
+<body>
+<div id="root">
+  <div class="side-gap"></div>
+  <main class="app-content">
+    <div class="ghost">（字体库）</div>
+
+    <div class="exp-backdrop">
+      <div class="exp-panel exp-panel-wide">
+        <header class="exp-head">
+          <div class="exp-head-text">
+            <span class="exp-title">导出</span>
+            <span class="exp-sub">品牌项目 A · 9 个字重</span>
+          </div>
+          <button class="fd-icon-btn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+        </header>
+
+        <div class="exp-body">
+          <section class="exp-block">
+            <div class="exp-block-head">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/></svg>
+              清单
+            </div>
+            <p class="exp-note">每个字重一行：家族、样式、字重、字符数、哈希、标签、备注都在里面。CSV 带 BOM，Excel 双击打开不乱码。</p>
+            <div class="exp-actions">
+              <button class="exp-btn primary">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/></svg>
+                导出 CSV
+              </button>
+              <button class="exp-btn">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v5h6"/><path d="M10 12h4M10 16h4"/></svg>
+                导出 JSON
+              </button>
+            </div>
+          </section>
+
+          <section class="exp-block">
+            <div class="exp-block-head">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>
+              项目字体包
+            </div>
+            <p class="exp-note">把字体文件、fonts.css、manifest.json 和一份授权说明打成一个 zip，解压就能丢进项目目录。</p>
+
+            <label class="exp-field">
+              <span>包名</span>
+              <input value="品牌项目 A" spellcheck="false">
+            </label>
+
+            <div class="exp-chips">
+              <button class="exp-chip on">包含字体文件</button>
+              <button class="exp-chip">同时生成 WOFF2</button>
+              <button class="exp-chip on">生成 fonts.css</button>
+            </div>
+            <p class="exp-note exp-note-dim">WOFF2 只对 TrueType 轮廓可靠；整份中文字体要几秒到十几秒，一次最多 200 个字重。</p>
+
+            <div class="exp-actions">
+              <button class="exp-btn primary">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>
+                打包
+              </button>
+            </div>
+          </section>
+
+          <section class="exp-block">
+            <div class="exp-block-head">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg>
+              @font-face 片段
+            </div>
+            <p class="exp-note">路径按包内目录写（fonts/… 或 web/…）。单独复制到别的项目时，记得改成实际的字体位置。</p>
+            <pre class="exp-css">/* ZFontManager · @font-face · 2026-10-20 09:31:02 */
+/* 路径相对于本文件所在目录；字号字重可直接用数值选择。 */
+
+/* 思源宋体 */
+@font-face {
+  font-family: "思源宋体";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("fonts/思源宋体.ttf") format("ttf");
+}
+
+@font-face {
+  font-family: "思源宋体";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("fonts/思源宋体 Bold.ttf") format("ttf");
+}</pre>
+            <div class="exp-actions">
+              <button class="exp-btn">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg>
+                复制 CSS
+              </button>
+            </div>
+          </section>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+</body>
+</html>

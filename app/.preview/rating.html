@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="utf-8">
+<title>评分与别名预览</title>
+<link rel="stylesheet" href="../src/design/tokens.css">
+<link rel="stylesheet" href="../src/app.css">
+<style>
+  html, body { margin: 0; }
+  body { background: var(--canvas); font-family: var(--font-ui); color: var(--text-primary); padding: 30px 40px 60px; }
+  h1.demo { font-size: 20px; font-weight: 500; margin: 0 0 4px; }
+  p.demo { margin: 0 0 22px; font-size: var(--fs-12); color: var(--text-tertiary); }
+  .row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; max-width: 940px; }
+  .stage { display: grid; grid-template-columns: 1fr 360px; gap: 40px; align-items: start; margin-top: 34px; }
+  .demo-sub { font-size: var(--fs-11); color: var(--text-tertiary); margin: 0 0 10px; letter-spacing: 0.02em; }
+  .ctx-menu { position: static !important; display: inline-block; }
+  .fake-hero { padding: 0 8px; }
+</style>
+</head>
+<body>
+<h1 class="demo">评分与别名</h1>
+<p class="demo">卡片右下角是评分角标；详情页大标题下面可以直接点星；右键菜单里也有一行五星。</p>
+
+<div class="row">
+  <article class="family-card">
+    <header class="card-head">
+      <span class="badge badge-ttf">TTF</span>
+      <span class="card-name">思源黑体</span>
+      <span class="card-spacer"></span>
+      <button class="star-btn star-on"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5"><path d="M12 3l2.9 5.9 6.5.9-4.7 4.6 1.1 6.5L12 17.8 6.2 20.9l1.1-6.5L2.6 9.8l6.5-.9z"/></svg></button>
+      <span class="card-os-lock"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>系统</span>
+    </header>
+    <span class="card-rate"><svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2.4"><path d="M12 3l2.9 5.9 6.5.9-4.7 4.6 1.1 6.5L12 17.8 6.2 20.9l1.1-6.5L2.6 9.8l6.5-.9z"/></svg><span class="tabular">5</span></span>
+    <div class="card-preview" style="min-height:64px">
+      <p class="preview-text" style='font-family:"Microsoft YaHei";font-size:26px;margin:0'>永和九年，岁在癸丑</p>
+    </div>
+  </article>
+
+  <article class="family-card">
+    <header class="card-head">
+      <span class="badge badge-otf">OTF</span>
+      <span class="card-name">霞鹜文楷</span>
+      <span class="card-spacer"></span>
+      <button class="star-btn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 3l2.9 5.9 6.5.9-4.7 4.6 1.1 6.5L12 17.8 6.2 20.9l1.1-6.5L2.6 9.8l6.5-.9z"/></svg></button>
+      <span class="card-os-lock"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>系统</span>
+    </header>
+    <span class="card-rate"><svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2.4"><path d="M12 3l2.9 5.9 6.5.9-4.7 4.6 1.1 6.5L12 17.8 6.2 20.9l1.1-6.5L2.6 9.8l6.5-.9z"/></svg><span class="tabular">4</span></span>
+    <div class="card-preview" style="min-height:64px">
+      <p class="preview-text" style='font-family:"KaiTi";font-size:26px;margin:0'>永和九年，岁在癸丑</p>
+    </div>
+  </article>
+
+  <article class="family-card">
+    <header class="card-head">
+      <span class="badge badge-ttf">TTF</span>
+      <span class="card-name">思源宋体</span>
+      <span class="card-spacer"></span>
+      <button class="star-btn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 3l2.9 5.9 6.5.9-4.7 4.6 1.1 6.5L12 17.8 6.2 20.9l1.1-6.5L2.6 9.8l6.5-.9z"/></svg></button>
+      <span class="card-os-lock"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>系统</span>
+    </header>
+    <div class="card-preview" style="min-height:64px">
+      <p class="preview-text" style='font-family:"SimSun";font-size:26px;margin:0'>永和九年，岁在癸丑</p>
+    </div>
+  </article>
+</div>
+
+<div class="stage">
+  <div>
+    <p class="demo-sub">右键菜单里的评分行（点当前分值＝取消评分）</p>
+    <ul class="ctx-menu glass-e3" role="menu">
+      <li><button class="ctx-item"><span class="ctx-icon">★</span><span class="ctx-label">加入收藏</span></button></li>
+      <div class="ctx-rate"><span class="ctx-rate-label">评分</span><span class="ctx-rate-stars">
+        <button class="ctx-star on">★</button><button class="ctx-star on">★</button><button class="ctx-star on">★</button><button class="ctx-star on">★</button><button class="ctx-star">★</button>
+      </span></div>
+      <li><button class="ctx-item"><span class="ctx-icon">A</span><span class="ctx-label">别名…</span></button></li>
+      <div class="ctx-sep"></div>
+      <li><button class="ctx-item"><span class="ctx-label">在资源管理器中显示</span></button></li>
+    </ul>
+
+    <p class="demo-sub" style="margin-top:26px">详情页大标题下面</p>
+    <div class="fake-hero">
+      <h1 class="fd-hero-title" style='font-family:"Microsoft YaHei"'>思源黑体</h1>
+      <div class="fd-hero-tags">
+        <div class="fd-rate" role="group">
+          <button class="fd-rate-star on">★</button><button class="fd-rate-star on">★</button><button class="fd-rate-star on">★</button><button class="fd-rate-star on">★</button><button class="fd-rate-star off">★</button>
+          <span class="fd-rate-note">打过分</span>
+        </div>
+        <span class="fd-alias">思源</span>
+        <span class="fd-alias">syht</span>
+        <button class="fd-alias-add">+ 别名</button>
+      </div>
+      <div class="fd-hero-meta" style="margin-top:10px">
+        <span class="fd-hero-chip">无衬线</span>
+        <span>Regular</span>
+        <span class="tabular">28,694 字形</span>
+        <span class="tabular">10.3 MB</span>
+      </div>
+    </div>
+  </div>
+
+  <div>
+    <p class="demo-sub">别名弹窗</p>
+    <div class="alias-panel glass-e3">
+      <header class="alias-head">
+        <h2 class="alias-title">别名</h2>
+        <button class="detail-close">✕</button>
+      </header>
+      <p class="alias-sub">给 <strong class="alias-family">Source Han Sans SC</strong></p>
+      <div class="alias-chips">
+        <button class="alias-chip"><span>思源黑体</span>✕</button>
+        <button class="alias-chip"><span>思源</span>✕</button>
+        <button class="alias-chip"><span>syht</span>✕</button>
+      </div>
+      <div class="topbar-field"><input placeholder="输一个你记得住的名字，回车加入"></div>
+      <p class="alias-hint">别名参与搜索：加完以后打「思源」「siyuan」或「syht」都能找到它。最多 8 个。</p>
+      <div class="alias-actions">
+        <button class="alias-ghost">清空</button>
+        <button class="alias-save">保存</button>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

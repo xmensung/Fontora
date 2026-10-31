@@ -1,0 +1,65 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage
+coverage
+*.lcov
+.nyc_output
+
+# Dependency directories
+node_modules/
+
+# TypeScript cache
+*.tsbuildinfo
+
+# Optional npm cache
+.npm
+
+# ESLint cache
+.eslintcache
+
+# dotenv
+.env
+.env.test
+.env.*
+
+# Parcel / misc caches
+.cache
+
+# Yarn v2
+.yarn/cache
+.yarn/unplugged
+.yarn/build-state.yml
+.yarn/install-state.gz
+.pnp.*
+
+# ── Vite build output ─────────────────────────────────────────────────────────
+dist/
+dist-ssr/
+
+# ── Tauri (build artifacts & auto-generated assets) ───────────────────────────
+src-tauri/target/
+src-tauri/icons/
+src-tauri/gen/
+
+# ── Old Electron build artefacts (pre-migration) ──────────────────────────────
+release/
+deprecated/dist-electron/
+deprecated/build/
+
+# ── OS ────────────────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+.idea
+.vscode

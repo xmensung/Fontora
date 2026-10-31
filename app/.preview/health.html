@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="utf-8">
+<title>字体体检预览</title>
+<link rel="stylesheet" href="../src/design/tokens.css">
+<link rel="stylesheet" href="../src/app.css">
+<style>
+  html, body { margin: 0; height: 100%; }
+  body { background: var(--canvas); font-family: var(--font-ui); color: var(--text-primary); }
+  #root { position: relative; height: 100vh; }
+  .fd-mono { font-family: var(--font-mono); }
+  .tabular { font-variant-numeric: tabular-nums; }
+  .cm-panel, .hp-panel { border-radius: 16px; }
+  .cm-backdrop, .hp-backdrop { align-items: center; }
+</style>
+</head>
+<body>
+<div id="root">
+
+<div class="cm-backdrop hp-backdrop">
+  <div class="hp-panel">
+    <header class="cm-head">
+      <span class="cm-head-icon">✚</span>
+      <div class="cm-head-text">
+        <div class="cm-title">字体体检</div>
+        <div class="cm-sub">微软雅黑 · 集合内共 4 个字重</div>
+      </div>
+      <button class="cm-close">✕</button>
+    </header>
+    <div class="hp-body">
+      <div class="hp-summary">
+        <div class="hp-ring ok">
+          <svg viewBox="0 0 64 64" width="64" height="64">
+            <circle cx="32" cy="32" r="26" class="hp-ring-track"></circle>
+            <circle cx="32" cy="32" r="26" class="hp-ring-value" stroke-dasharray="143.8 19.6" transform="rotate(-90 32 32)"></circle>
+          </svg>
+          <span class="hp-ring-num tabular">88</span>
+        </div>
+        <div class="hp-summary-text">
+          <div class="hp-verdict">能用，但有几处值得留意。</div>
+          <div class="hp-tally">
+            <span class="hp-tally-item warn">2 处提醒</span>
+            <span class="hp-tally-item info">1 条说明</span>
+          </div>
+        </div>
+      </div>
+      <div class="hp-issues"><div class="hp-issue warn"><span class="hp-issue-icon">▲</span>
+      <div class="hp-issue-body"><div class="hp-issue-title">2 张表的校验和与声明不符</div><div class="hp-issue-detail">head、name。文件很可能被第三方工具改写过（合并、汉化、加壳都会这样）。</div></div></div><div class="hp-issue warn"><span class="hp-issue-icon">▲</span>
+      <div class="hp-issue-body"><div class="hp-issue-title">缺少 1 个基本拉丁字符</div><div class="hp-issue-detail">缺：~。英文和标点会显示成方框或回落到别的字体。</div></div></div><div class="hp-issue info"><span class="hp-issue-icon">i</span>
+      <div class="hp-issue-body"><div class="hp-issue-title">现代汉语常用字表 3500 字全部覆盖</div></div></div></div>
+      <section class="hp-section">
+        <div class="hp-section-head">表结构</div>
+        <div class="hp-tables"><div class="hp-table has"><span class="hp-table-tag fd-mono">head</span><span class="hp-table-len tabular">54 B</span></div><div class="hp-table has"><span class="hp-table-tag fd-mono">hhea</span><span class="hp-table-len tabular">36 B</span></div><div class="hp-table has"><span class="hp-table-tag fd-mono">maxp</span><span class="hp-table-len tabular">32 B</span></div><div class="hp-table missing"><span class="hp-table-tag fd-mono">cmap</span><span class="hp-table-len tabular">8,412 B</span></div><div class="hp-table has"><span class="hp-table-tag fd-mono">name</span><span class="hp-table-len tabular">3,196 B</span></div><div class="hp-table has"><span class="hp-table-tag fd-mono">OS/2</span><span class="hp-table-len tabular">96 B</span></div><div class="hp-table has"><span class="hp-table-tag fd-mono">post</span><span class="hp-table-len tabular">32 B</span></div><div class="hp-table has"><span class="hp-table-tag fd-mono">glyf</span><span class="hp-table-len tabular">6,204,918 B</span></div><div class="hp-table has"><span class="hp-table-tag fd-mono">loca</span><span class="hp-table-len tabular">38,402 B</span></div><div class="hp-table missing"><span class="hp-table-tag fd-mono">CFF</span><span class="hp-table-len tabular">缺失</span></div><div class="hp-table missing"><span class="hp-table-tag fd-mono">CFF2</span><span class="hp-table-len tabular">缺失</span></div><div class="hp-table missing"><span class="hp-table-tag fd-mono">fvar</span><span class="hp-table-len tabular">缺失</span></div></div>
+        <div class="hp-table-note">文件里共 19 张表 · 部分校验和不符</div>
+      </section>
+    </div>
+  </div>
+</div>
+</div></body></html>

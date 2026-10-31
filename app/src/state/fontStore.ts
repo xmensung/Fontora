@@ -1,0 +1,1936 @@
+import { create } from "zustand";
+import { listen } from "@tauri-apps/api/event";
+import {
+  ipc,
+  type AdobeApp,
+  type AffinityConnection,
+  type AppSettings,
+  type Classification,
+  type DupeGroup,
+  type FontFace,
+  type FontFormat,
+  type InstallMode,
+  type OnlineFamily,
+  type OnlineFamilyDetail,
+  type OnlineProgress,
+  type ReferenceReport,
+  type ScanProgress,
+  type TrashEntry,
+  type UsageRow,
+} from "../lib/ipc";
+import { matchAffinityFonts, type AffinityEvent } from "../lib/affinity";
+import { toast } from "../design/primitives/Toast";
+import { setSoundLevel, type SoundLevel } from "../lib/sound";
+import { applyTheme, type ThemePref } from "../lib/theme";
+import {
+  getLocalePref,
+  hydrateLocalePref,
+  isLocalePref,
+  setLocalePref as applyLocalePref,
+  t,
+  type LocalePref,
+} from "../lib/i18n";
+
+export const SIZES = [8, 14, 18, 24, 32, 48, 64, 96] as const;
+
+// init() subscribes to backend events; React StrictMode runs the mounting
+// effect twice in dev, so guard it — a second run would attach every
+// listener twice and each toast would appear twice.
+let initStarted = false;
+
+export type ViewMode = "grid" | "list" | "waterfall";
+export type MotionPref = "system" | "reduced";
+export type TransparencyPref = "full" | "reduced";
+export type UiScale = "auto" | number;
+export type SortMode = "name" | "styles" | "size" | "glyphs" | "recent" | "added" | "rating";
+
+/** 评分筛选：全部 / 四星及以上 / 还没评分。 */
+export type RatingFilter = "all" | "top" | "none";
+
+/** 使用统计的三类事件。 */
+export type UsageKind = "view" | "install" | "reference";
+/** 安装状态筛选：只看「系统里装没装」，不再区分文件是系统目录还是用户目录。 */
+export type InstallFilter = "all" | "installed" | "notInstalled";
+
+export type Nav =
+  | { kind: "library" }
+  | { kind: "trash" }
+  | { kind: "about" }
+  | { kind: "tag"; tag: string }
+  | { kind: "collection"; name: string }
+  | { kind: "favorites" }
+  | { kind: "installed" }
+  | { kind: "activatedSession" }
+  | { kind: "notInstalled" }
+  | { kind: "online" }
+  | { kind: "duplicates" }
+  | { kind: "references" }
+  | { kind: "usage" }
+  | { kind: "organize" }
+  | { kind: "folders" }
+  | { kind: "backup" };
+
+export interface Family {
+  name: string;
+  faces: FontFace[];
+  formats: string[];
+  isVariable: boolean;
+  active: boolean;
+  deactivatable: boolean;
+  tags: string[];
+  totalSize: number;
+  foundry: string | null;
+  classification: Classification;
+  scripts: string[];
+  features: string[];
+  glyphCount: number;
+}
+
+interface FontStore {
+  phase: "scanning" | "ready" | "error";
+  scanProgress: ScanProgress;
+  fonts: FontFace[];
+  tags: Record<string, string[]>;
+  collections: Record<string, string[]>;
+  favorites: string[];
+  sessionActivated: string[];
+  lastImported: string[];
+  notes: Record<string, string>;
+  trash: TrashEntry[];
+
+  selection: string[];
+
+  visibleOrder: string[];
+
+  compare: string[] | null;
+
+  comparePicking: boolean;
+  settingsOpen: boolean;
+  helpOpen: boolean;
+  paletteOpen: boolean;
+  settings: AppSettings;
+  affinityConnection: AffinityConnection | null;
+  onlineFamilies: OnlineFamily[] | null;
+  onlineFetchedAt: number | null;
+  onlineLoading: boolean;
+  onlineError: string | null;
+  onlineQuery: string;
+  onlineCategory: string | null;
+  onlineLicense: string | null;
+  onlineVariableOnly: boolean;
+  onlineDetail: OnlineFamilyDetail | null;
+  onlineDetailLoading: boolean;
+  onlinePreviewPath: string | null;
+  onlineDownloading: string | null;
+  onlineProgress: OnlineProgress | null;
+
+  adobeAvailable: boolean;
+  motionPref: MotionPref;
+  transparencyPref: TransparencyPref;
+  closeToTray: boolean;
+  startMinimized: boolean;
+  uiScale: UiScale;
+  appliedScale: number;
+  soundPref: SoundLevel;
+  themePref: ThemePref;
+  localePref: LocalePref;
+
+  bulkTagFor: string[] | null;
+
+  onboarded: boolean;
+
+  tourStep: number | null;
+
+  sampleText: string;
+  sizeIndex: number;
+  viewMode: ViewMode;
+  sort: SortMode;
+  search: string;
+
+  classFilter: Classification[];
+
+  scriptFilter: string[];
+  formatFilter: FontFormat[];
+  featureFilter: string[];
+  installFilter: InstallFilter;
+  charFilter: string;
+  charMatches: string[] | null;
+  charSearching: boolean;
+  collapsedSections: string[];
+  variableOnly: boolean;
+  toggleableOnly: boolean;
+  nav: Nav;
+  selectedFamily: string | null;
+  /** Family whose full detail page is open, if any. */
+  fontDetailFamily: string | null;
+  /** 重复字体分组（P4 去重），进入页面时拉取。 */
+  dupeGroups: DupeGroup[];
+  dupeLoading: boolean;
+  /** 设计稿 / 源码的字体引用分析结果（P5）。 */
+  refReport: ReferenceReport | null;
+  refLoading: boolean;
+  refRoot: string | null;
+
+  /** 导出面板当前作用范围（P7）：家族名 + 界面上给用户看的标题。 */
+  exportScope: { names: string[]; label: string } | null;
+
+  /** 使用统计（P8）：家族名 → 三类计数。 */
+  usage: Record<string, UsageRow>;
+  usageLoading: boolean;
+
+  /** 评分（P9）：家族名 → 1–5，没有键就是没评分。 */
+  ratings: Record<string, number>;
+  /** 别名（P9）：家族名 → 用户自己起的名字，参与搜索。 */
+  aliases: Record<string, string[]>;
+  /** 拼音检索键（P9）：家族名 / 别名 → 小写 ASCII 键。 */
+  pinyinKeys: Record<string, string[]>;
+  /** 评分筛选：全部 / 四星以上 / 没评分。 */
+  ratingFilter: RatingFilter;
+  /** 正在编辑别名的家族，null = 没开。 */
+  aliasFor: string | null;
+
+  pendingCollectionFor: string | null;
+
+  duplicateReport: { names: string[]; at: number } | null;
+
+  init: () => Promise<void>;
+  rescan: () => Promise<void>;
+  setFamilyActive: (family: string, active: boolean) => Promise<void>;
+  activateFamilySession: (family: string) => Promise<void>;
+  setFontFileActive: (path: string, active: boolean) => Promise<void>;
+  uninstallFontFile: (path: string) => Promise<void>;
+  loadDuplicates: () => Promise<void>;
+  deleteDuplicates: (paths: string[]) => Promise<void>;
+  scanReferences: (root: string) => Promise<void>;
+  openExport: (names: string[], label: string) => void;
+  closeExport: () => void;
+  /** 迁移包导入后重读资产，不重扫字体。 */
+  reloadAssets: () => Promise<void>;
+  loadUsage: () => Promise<void>;
+  touchUsage: (families: string[], kind: UsageKind) => void;
+  clearUsage: () => Promise<void>;
+  setRating: (family: string, score: number) => void;
+  setRatingMany: (families: string[], score: number) => void;
+  setRatingFilter: (value: RatingFilter) => void;
+  refreshPinyin: () => void;
+  openAlias: (family: string) => void;
+  closeAlias: () => void;
+  saveAliases: (family: string, aliases: string[]) => Promise<void>;
+  installPaths: (paths: string[], mode: InstallMode) => Promise<void>;
+  uninstallFamily: (family: string) => Promise<void>;
+  restoreTrash: (entryId: string) => Promise<void>;
+  deleteTrashEntry: (entryId: string) => Promise<void>;
+  emptyTrash: () => Promise<void>;
+  setFamilyTags: (family: string, tags: string[]) => Promise<void>;
+  createCollection: (name: string) => Promise<void>;
+  deleteCollection: (name: string) => Promise<void>;
+  renameCollection: (from: string, to: string) => Promise<void>;
+  toggleFamilyInCollection: (collection: string, family: string) => Promise<void>;
+  addFamiliesToCollection: (collection: string, families: string[]) => Promise<void>;
+  toggleFavorite: (family: string) => Promise<void>;
+  setFamilyNote: (family: string, note: string) => Promise<void>;
+  setFamiliesActiveBulk: (families: string[], active: boolean) => Promise<void>;
+  applyFamilyInApp: (family: string, app: AdobeApp) => Promise<void>;
+  selectWith: (family: string, mode: "single" | "toggle" | "range", order: string[]) => void;
+  selectAll: () => void;
+  openCompare: (families: string[]) => void;
+  closeCompare: () => void;
+  setComparePicking: (on: boolean) => void;
+  togglePick: (family: string) => void;
+  setSettingsOpen: (open: boolean) => void;
+  setHelpOpen: (open: boolean) => void;
+  setPaletteOpen: (open: boolean) => void;
+  updateSettings: (settings: AppSettings) => Promise<void>;
+  refreshAffinityConnection: () => Promise<void>;
+  pollAffinityLink: () => Promise<void>;
+  loadOnlineCatalogue: (force: boolean) => Promise<void>;
+  setOnlineQuery: (q: string) => void;
+  setOnlineCategory: (c: string | null) => void;
+  setOnlineLicense: (l: string | null) => void;
+  setOnlineVariableOnly: (on: boolean) => void;
+  openOnlineFamily: (id: string) => Promise<void>;
+  closeOnlineFamily: () => void;
+  installOnlineFamily: (id: string) => Promise<void>;
+  setMotionPref: (pref: MotionPref) => void;
+  setTransparencyPref: (pref: TransparencyPref) => void;
+  setCloseToTray: (v: boolean) => void;
+  setStartMinimized: (v: boolean) => void;
+  setUiScale: (scale: UiScale) => void;
+  toggleFormat: (f: FontFormat) => void;
+  toggleFeature: (tag: string) => void;
+  setInstallFilter: (v: InstallFilter) => void;
+  setCharFilter: (ch: string) => void;
+  toggleSection: (id: string) => void;
+  setSoundPref: (pref: SoundLevel) => void;
+  setThemePref: (pref: ThemePref) => void;
+  setLocalePref: (pref: LocalePref) => void;
+  startTour: () => void;
+  setTourStep: (step: number) => void;
+  endTour: () => void;
+  setBulkTagFor: (families: string[] | null) => void;
+  applyTagToFamilies: (tag: string, families: string[]) => Promise<void>;
+  setDuplicateReport: (r: { names: string[]; at: number } | null) => void;
+
+  setSampleText: (t: string) => void;
+  setSizeIndex: (i: number) => void;
+  setViewMode: (m: ViewMode) => void;
+  setSort: (s: SortMode) => void;
+  setSearch: (s: string) => void;
+  toggleClassFilter: (c: Classification) => void;
+  toggleScriptFilter: (s: string) => void;
+  setVariableOnly: (on: boolean) => void;
+  setToggleableOnly: (on: boolean) => void;
+  exportLibraryData: (dest: string) => Promise<void>;
+  importLibraryData: (src: string) => Promise<void>;
+  setNav: (n: Nav) => void;
+  select: (family: string | null) => void;
+  openFontDetail: (family: string) => void;
+  closeFontDetail: () => void;
+}
+
+function applyMotionPref(pref: MotionPref) {
+  document.documentElement.dataset.motion = pref;
+}
+
+function applyTransparencyPref(pref: TransparencyPref) {
+  document.documentElement.dataset.transparency = pref;
+}
+
+let prefsTimer: ReturnType<typeof setTimeout> | undefined;
+function persistPrefs(get: () => FontStore) {
+  clearTimeout(prefsTimer);
+  prefsTimer = setTimeout(() => {
+    const s = get();
+    void ipc.setPrefs({
+      sampleText: s.sampleText,
+      sizeIndex: s.sizeIndex,
+      viewMode: s.viewMode,
+      sort: s.sort,
+      motionPref: s.motionPref,
+      transparencyPref: s.transparencyPref,
+      closeToTray: s.closeToTray,
+      startMinimized: s.startMinimized,
+      uiScale: s.uiScale === "auto" ? null : s.uiScale,
+      collapsedSections: s.collapsedSections,
+      soundPref: s.soundPref,
+      themePref: s.themePref,
+      localePref: s.localePref,
+      onboarded: s.onboarded,
+      lastImported: s.lastImported,
+    });
+  }, 600);
+}
+
+export const useFontStore = create<FontStore>((set, get) => ({
+  phase: "scanning",
+  scanProgress: { done: 0, total: 0 },
+  fonts: [],
+  tags: {},
+  collections: {},
+  favorites: [],
+  sessionActivated: [],
+  lastImported: [],
+  notes: {},
+  trash: [],
+  selection: [],
+  visibleOrder: [],
+  compare: null,
+  comparePicking: false,
+  settingsOpen: false,
+  helpOpen: false,
+  paletteOpen: false,
+  settings: { extraDirs: [], watchEnabled: false, autoActivateImports: false, libraryDir: null, libraryDirEnabled: false, affinityEnabled: false, affinityDeactivateOnQuit: true, onlineFontsEnabled: false },
+  affinityConnection: null,
+  onlineFamilies: null,
+  onlineFetchedAt: null,
+  onlineLoading: false,
+  onlineError: null,
+  onlineQuery: "",
+  onlineCategory: null,
+  onlineLicense: null,
+  onlineVariableOnly: false,
+  onlineDetail: null,
+  onlineDetailLoading: false,
+  onlinePreviewPath: null,
+  onlineDownloading: null,
+  onlineProgress: null,
+  adobeAvailable: false,
+  motionPref: "system",
+  soundPref: "off",
+  themePref: "dark",
+  transparencyPref: "full",
+  closeToTray: false,
+  startMinimized: false,
+  uiScale: "auto",
+  appliedScale: 1,
+  localePref: getLocalePref(),
+  bulkTagFor: null,
+  onboarded: false,
+  tourStep: null,
+
+  sampleText: t("preview.defaultSample"),
+  sizeIndex: 3,
+  viewMode: "grid",
+  sort: "name",
+  search: "",
+  classFilter: [],
+  scriptFilter: [],
+  formatFilter: [],
+  featureFilter: [],
+  installFilter: "all",
+  charFilter: "",
+  charMatches: null,
+  charSearching: false,
+  variableOnly: false,
+  collapsedSections: [],
+  toggleableOnly: false,
+  nav: { kind: "library" },
+  fontDetailFamily: null,
+  dupeGroups: [],
+  dupeLoading: false,
+  refReport: null,
+  refLoading: false,
+  refRoot: null,
+  exportScope: null,
+  usage: {},
+  usageLoading: false,
+  ratings: {},
+  aliases: {},
+  pinyinKeys: {},
+  ratingFilter: "all",
+  aliasFor: null,
+  selectedFamily: null,
+  pendingCollectionFor: null,
+  duplicateReport: null,
+
+  init: async () => {
+    if (initStarted) return;
+    initStarted = true;
+    await listen<ScanProgress>("scan:progress", (e) => {
+      set({ scanProgress: e.payload });
+    });
+    try {
+      const prefs = (await ipc.getPrefs()) ?? {};
+      set({
+        sampleText: typeof prefs.sampleText === "string" ? prefs.sampleText : get().sampleText,
+        sizeIndex: typeof prefs.sizeIndex === "number" ? prefs.sizeIndex : get().sizeIndex,
+        viewMode: (["grid", "list", "waterfall"] as const).includes(
+          prefs.viewMode as ViewMode,
+        )
+          ? (prefs.viewMode as ViewMode)
+          : "grid",
+        sort: (["name", "recent", "added", "rating", "styles", "size", "glyphs"] as const).includes(
+          prefs.sort as SortMode,
+        )
+          ? (prefs.sort as SortMode)
+          : "name",
+        motionPref: prefs.motionPref === "reduced" ? "reduced" : "system",
+        transparencyPref: prefs.transparencyPref === "reduced" ? "reduced" : "full",
+        closeToTray: prefs.closeToTray === true,
+        startMinimized: prefs.startMinimized === true,
+        uiScale: typeof prefs.uiScale === "number" ? prefs.uiScale : "auto",
+        collapsedSections: Array.isArray(prefs.collapsedSections)
+          ? (prefs.collapsedSections as unknown[]).filter((n): n is string => typeof n === "string")
+          : [],
+        soundPref: (["off", "subtle", "on"] as const).includes(prefs.soundPref as SoundLevel)
+          ? (prefs.soundPref as SoundLevel)
+          : "off",
+        themePref: (["dark", "light", "system"] as const).includes(prefs.themePref as ThemePref)
+          ? (prefs.themePref as ThemePref)
+          : "dark",
+        onboarded: prefs.onboarded === true,
+        localePref: isLocalePref(prefs.localePref) ? prefs.localePref : get().localePref,
+        lastImported: Array.isArray(prefs.lastImported)
+          ? (prefs.lastImported as unknown[]).filter((n): n is string => typeof n === "string")
+          : [],
+      });
+      setSoundLevel(get().soundPref);
+      hydrateLocalePref(get().localePref);
+    } catch {
+
+    }
+    applyTheme(get().themePref);
+    applyMotionPref(get().motionPref);
+    applyTransparencyPref(get().transparencyPref);
+    try {
+      const scale = get().uiScale;
+      set({ appliedScale: await ipc.setUiScale(scale === "auto" ? null : scale) });
+    } catch {
+
+    }
+    try {
+      set({ settings: await ipc.getSettings() });
+    } catch {
+
+    }
+    try {
+      set({ adobeAvailable: await ipc.adobeAvailable() });
+    } catch {
+
+    }
+
+    let watchTimer: ReturnType<typeof setTimeout> | undefined;
+    await listen("fonts:changed", () => {
+      clearTimeout(watchTimer);
+      watchTimer = setTimeout(() => {
+        if (get().phase === "scanning") return;
+        const before = get().fonts.length;
+        void get()
+          .rescan()
+          .then(() => {
+            const after = get().fonts.length;
+            if (after !== before) {
+              toast.success(
+                t("toast.libraryUpdated"),
+                after > before
+                  ? t("toast.newFontsFound", { count: after - before })
+                  : t("toast.fontsRemoved", { count: before - after }),
+              );
+            }
+          });
+      }, 1500);
+    });
+    await listen<AffinityEvent>("affinity:event", (e) => {
+      const evt = e.payload;
+      if (evt.kind === "needs") {
+        const paths = matchAffinityFonts(
+          get().fonts,
+          evt.docs.flatMap((d) => d.fonts),
+        );
+        if (paths.length === 0) return;
+        void (async () => {
+          try {
+            const activated = await ipc.affinitySessionActivate(paths);
+            if (activated.length === 0) return;
+            const titles = [...new Set(evt.docs.map((d) => d.title))].join(", ");
+            toast.success(
+              t("toast.affinityActivated", { count: activated.length, docs: titles }),
+              undefined,
+              "activate",
+            );
+            await get().rescan();
+          } catch (err) {
+            toast.error(t("toast.affinityError"), String(err));
+          }
+        })();
+      } else if (evt.kind === "deactivated") {
+        toast.success(t("toast.affinityDeactivated"), undefined, "activate");
+        void get().rescan();
+      } else if (evt.kind === "error") {
+        toast.error(t("toast.affinityError"), evt.message ?? "");
+      }
+    });
+    await listen<OnlineProgress>("online:progress", (e) => {
+      set({ onlineProgress: e.payload });
+    });
+    await get().rescan();
+  },
+
+  rescan: async () => {
+    set({ phase: "scanning" });
+    try {
+      const [fonts, tags, collections, favorites, notes, trash, ratings, aliases] = await Promise.all([
+        ipc.scanFonts(),
+        ipc.getTags(),
+        ipc.getCollections(),
+        ipc.getFavorites(),
+        ipc.getNotes(),
+        ipc.listTrash(),
+        ipc.getRatings(),
+        ipc.getAliases(),
+      ]);
+      set({ fonts, tags, collections, favorites, notes, trash, ratings, aliases, phase: "ready" });
+      get().refreshPinyin();
+      // Drop last-imported entries that no longer exist.
+      const names = new Set(fonts.map((f) => f.family));
+      const keptImported = get().lastImported.filter((n) => names.has(n));
+      if (get().charFilter) set({ charMatches: null, charSearching: false });
+      if (keptImported.length !== get().lastImported.length) set({ lastImported: keptImported });
+      // Drop session entries that no longer exist or are no longer active.
+      const alive = new Set(fonts.filter((f) => f.active).map((f) => f.family));
+      const kept = get().sessionActivated.filter((n) => alive.has(n));
+      if (kept.length !== get().sessionActivated.length) set({ sessionActivated: kept });
+      void get().loadUsage();
+    } catch (e) {
+      set({ phase: "error" });
+      toast.error(t("toast.couldntScan"), String(e));
+    }
+  },
+
+  setFamilyActive: async (family, active) => {
+    const faces = get().fonts.filter((f) => f.family === family && f.deactivatable);
+    const paths = [...new Set(faces.map((f) => f.path))];
+    if (paths.length === 0) return;
+
+    const prevSession = get().sessionActivated;
+    set({
+      fonts: get().fonts.map((f) =>
+        f.family === family && f.deactivatable ? { ...f, active } : f,
+      ),
+      sessionActivated: prevSession.filter((n) => n !== family),
+    });
+    try {
+      await ipc.setFontsActive(paths, active);
+    } catch (e) {
+      set({
+        fonts: get().fonts.map((f) =>
+          f.family === family && f.deactivatable ? { ...f, active: !active } : f,
+        ),
+        sessionActivated: prevSession,
+      });
+      toast.error(t(active ? "toast.couldntActivate" : "toast.couldntDeactivate"), String(e));
+    }
+  },
+
+  activateFamilySession: async (family) => {
+    const faces = get().fonts.filter((f) => f.family === family && f.deactivatable);
+    const paths = [...new Set(faces.map((f) => f.path))];
+    if (paths.length === 0) return;
+    set({
+      fonts: get().fonts.map((f) =>
+        f.family === family && f.deactivatable ? { ...f, active: true } : f,
+      ),
+    });
+    try {
+      await ipc.setFontsActiveSession(paths);
+      set({ sessionActivated: [...new Set([...get().sessionActivated, family])] });
+      toast.success(
+        t("toast.activeUntilClose", { family }),
+        t("toast.activeUntilCloseSub"),
+        "toggle-on",
+      );
+    } catch (e) {
+      set({
+        fonts: get().fonts.map((f) =>
+          f.family === family && f.deactivatable ? { ...f, active: false } : f,
+        ),
+      });
+      toast.error(t("toast.couldntActivate"), String(e));
+    }
+  },
+
+  setFontFileActive: async (path, active) => {
+    const faces = get().fonts.filter((f) => f.path === path);
+    if (faces.length === 0) return;
+    // System files are protected: never deactivate or remove them from here.
+    if (faces.every((f) => f.source === "system")) {
+      toast.error(t("toast.cantUninstallSystem"), t("toast.cantUninstallSystemSub"));
+      return;
+    }
+    const targets = faces.filter((f) => f.deactivatable);
+    if (targets.length === 0) return;
+    const prevFonts = get().fonts;
+    set({
+      fonts: prevFonts.map((f) =>
+        f.path === path && f.deactivatable ? { ...f, active } : f,
+      ),
+    });
+    try {
+      await ipc.setFontsActive([path], active);
+    } catch (e) {
+      set({ fonts: prevFonts });
+      toast.error(t(active ? "toast.couldntActivate" : "toast.couldntDeactivate"), String(e));
+    }
+  },
+
+  uninstallFontFile: async (path) => {
+    const faces = get().fonts.filter((f) => f.path === path);
+    if (faces.length === 0) return;
+    // System files are protected: they cannot be moved to trash.
+    if (faces.some((f) => f.source === "system")) {
+      toast.error(t("toast.cantUninstallSystem"), t("toast.cantUninstallSystemSub"));
+      return;
+    }
+    const family = faces[0].family;
+    try {
+      const entry = await ipc.uninstallFont(path, family);
+      const remaining = get().fonts.filter((f) => f.path !== path);
+      const familyAlive = remaining.some((f) => f.family === family);
+      set({
+        fonts: remaining,
+        trash: await ipc.listTrash(),
+        selectedFamily: !familyAlive && get().selectedFamily === family ? null : get().selectedFamily,
+        selection: !familyAlive ? get().selection.filter((f) => f !== family) : get().selection,
+        lastImported: !familyAlive
+          ? get().lastImported.filter((f) => f !== family)
+          : get().lastImported,
+      });
+
+      if (!familyAlive) {
+        const { tags, favorites, collections } = get();
+        if (tags[family]) void get().setFamilyTags(family, []);
+        if (favorites.includes(family)) void get().toggleFavorite(family);
+        for (const [name, members] of Object.entries(collections)) {
+          if (members.includes(family)) {
+            const next = members.filter((m) => m !== family);
+            set({ collections: { ...get().collections, [name]: next } });
+            void ipc.setCollection(name, next);
+          }
+        }
+      }
+      toast.success(t("toast.movedToTrash", { family }), t("toast.movedToTrashSub"), "trash", {
+        label: t("toast.undo"),
+        run: () => {
+          void (async () => {
+            try {
+              await ipc.restoreFromTrash(entry.id);
+              set({ trash: await ipc.listTrash() });
+              await get().rescan();
+              toast.success(t("toast.restoredFamily", { family }), undefined, "restore");
+            } catch (e) {
+              toast.error(t("toast.couldntRestore"), String(e));
+            }
+          })();
+        },
+      });
+    } catch (e) {
+      toast.error(t("toast.couldntMoveToTrash"), String(e));
+    }
+  },
+
+  loadDuplicates: async () => {
+    set({ dupeLoading: true });
+    try {
+      set({ dupeGroups: await ipc.fontDuplicates() });
+    } catch (e) {
+      toast.error(t("toast.couldntScan"), String(e));
+    } finally {
+      set({ dupeLoading: false });
+    }
+  },
+
+  scanReferences: async (root) => {
+    set({ refLoading: true, refRoot: root });
+    try {
+      const report = await ipc.fontReferences(root);
+      set({ refReport: report });
+      const known = new Set(get().fonts.map((f) => f.family));
+      const hit = report.fonts.filter((f) => f.installed && known.has(f.name)).map((f) => f.name);
+      get().touchUsage(hit, "reference");
+    } catch (e) {
+      toast.error(t("toast.couldntScan"), String(e));
+      set({ refReport: null });
+    } finally {
+      set({ refLoading: false });
+    }
+  },
+
+  deleteDuplicates: async (paths) => {
+    const byPath = new Map<string, FontFace>();
+    for (const face of get().fonts) {
+      if (!byPath.has(face.path)) byPath.set(face.path, face);
+    }
+    // 系统字体不给删（界面上也是禁用的，这里再兜一层）。
+    const targets = paths.filter((p) => {
+      const face = byPath.get(p);
+      return face !== undefined && face.source !== "system";
+    });
+    if (targets.length === 0) return;
+
+    const goneFamilies = new Set<string>();
+    const entries: string[] = [];
+    for (const path of targets) {
+      const face = byPath.get(path);
+      if (!face) continue;
+      try {
+        const entry = await ipc.uninstallFont(path, face.family);
+        entries.push(entry.id);
+        goneFamilies.add(face.family);
+      } catch (e) {
+        toast.error(t("toast.couldntMoveToTrash"), `${face.family} · ${String(e)}`);
+      }
+    }
+    if (entries.length === 0) return;
+
+    await get().rescan();
+    await get().loadDuplicates();
+
+    // 删掉的那几份如果是某个家族的最后一个文件，把标签 / 收藏 / 集合里的引用清掉。
+    const alive = new Set(get().fonts.map((f) => f.family));
+    const stale = [...goneFamilies].filter((family) => !alive.has(family) && family);
+    if (stale.length > 0) {
+      const { tags, favorites, collections } = get();
+      for (const family of stale) {
+        if (tags[family]) void get().setFamilyTags(family, []);
+        if (favorites.includes(family)) void get().toggleFavorite(family);
+        set({ favorites: get().favorites.filter((f) => f !== family) });
+        for (const [name, members] of Object.entries(collections)) {
+          if (members.includes(family)) {
+            const next = members.filter((m) => m !== family);
+            set({ collections: { ...get().collections, [name]: next } });
+            void ipc.setCollection(name, next);
+          }
+        }
+      }
+    }
+
+    toast.success(
+      t("dupe.toastRemoved", { count: entries.length }),
+      t("dupe.toastRemovedSub"),
+      "trash",
+      {
+        label: t("toast.undo"),
+        run: () => {
+          void (async () => {
+            try {
+              for (const id of entries) await ipc.restoreFromTrash(id);
+              await get().rescan();
+              await get().loadDuplicates();
+              toast.success(t("dupe.toastRestored", { count: entries.length }), undefined, "restore");
+            } catch (e) {
+              toast.error(t("toast.couldntRestore"), String(e));
+            }
+          })();
+        },
+      },
+    );
+  },
+
+  installPaths: async (paths, mode) => {
+    try {
+      const dupKeyOf = (f: { postscriptName: string | null; family: string; style: string }) =>
+        f.postscriptName ?? `${f.family} ${f.style}`;
+      const existing = get().fonts.map(dupKeyOf);
+      const result = await ipc.installFonts(paths, existing, mode);
+      if (result.installed.length > 0) {
+        const families = [...new Set(result.installed.map((f) => f.family))];
+        set({ fonts: [...get().fonts, ...result.installed], lastImported: families });
+        persistPrefs(get);
+        get().touchUsage(families, "install");
+        toast.success(
+          families.length === 1
+            ? t("toast.installedOne", { name: families[0] })
+            : t("toast.installedMany", { count: families.length }),
+          undefined,
+          "install",
+        );
+      }
+      for (const err of result.errors) toast.error(t("toast.installFailed"), err);
+      if (
+        result.installed.length === 0 &&
+        result.errors.length === 0 &&
+        result.duplicates.length === 0
+      ) {
+        toast.error(t("toast.nothingToInstall"), t("toast.nothingToInstallSub"));
+      }
+      if (result.duplicates.length > 0) {
+        set({
+          duplicateReport: { names: [...result.duplicates], at: Date.now() },
+        });
+      }
+    } catch (e) {
+      toast.error(t("toast.installFailed"), String(e));
+    }
+  },
+
+  uninstallFamily: async (family) => {
+    const faces = get().fonts.filter(
+      (f) => f.family === family && f.source !== "system",
+    );
+    if (faces.length === 0) {
+      toast.error(t("toast.cantUninstallSystem"), t("toast.cantUninstallSystemSub"));
+      return;
+    }
+    const paths = [...new Set(faces.map((f) => f.path))];
+    try {
+      const entryIds: string[] = [];
+      for (const path of paths) {
+        entryIds.push((await ipc.uninstallFont(path, family)).id);
+      }
+      set({
+        fonts: get().fonts.filter((f) => !paths.includes(f.path)),
+        trash: await ipc.listTrash(),
+        selectedFamily: get().selectedFamily === family ? null : get().selectedFamily,
+        selection: get().selection.filter((f) => f !== family),
+        lastImported: get().lastImported.filter((f) => f !== family),
+      });
+
+      const { tags, favorites, collections } = get();
+      if (tags[family]) void get().setFamilyTags(family, []);
+      if (favorites.includes(family)) void get().toggleFavorite(family);
+      for (const [name, members] of Object.entries(collections)) {
+        if (members.includes(family)) {
+          const next = members.filter((m) => m !== family);
+          set({ collections: { ...get().collections, [name]: next } });
+          void ipc.setCollection(name, next);
+        }
+      }
+      toast.success(t("toast.movedToTrash", { family }), t("toast.movedToTrashSub"), "trash", {
+        label: t("toast.undo"),
+        run: () => {
+          void (async () => {
+            try {
+              for (const id of entryIds) await ipc.restoreFromTrash(id);
+              set({ trash: await ipc.listTrash() });
+              await get().rescan();
+              toast.success(t("toast.restoredFamily", { family }), undefined, "restore");
+            } catch (e) {
+              toast.error(t("toast.couldntRestore"), String(e));
+            }
+          })();
+        },
+      });
+    } catch (e) {
+      toast.error(t("toast.couldntMoveToTrash"), String(e));
+    }
+  },
+
+  restoreTrash: async (entryId) => {
+    try {
+      await ipc.restoreFromTrash(entryId);
+      set({ trash: await ipc.listTrash() });
+      await get().rescan();
+      toast.success(t("toast.fontRestored"), undefined, "restore");
+    } catch (e) {
+      toast.error(t("toast.couldntRestore"), String(e));
+    }
+  },
+
+  deleteTrashEntry: async (entryId) => {
+    try {
+      await ipc.deleteTrashEntry(entryId);
+      set({ trash: await ipc.listTrash() });
+    } catch (e) {
+      toast.error(t("toast.couldntDelete"), String(e));
+    }
+  },
+
+  emptyTrash: async () => {
+    try {
+      await ipc.emptyTrash();
+      set({ trash: [] });
+      toast.success(t("toast.trashEmptied"), undefined, "trash-empty");
+    } catch (e) {
+      toast.error(t("toast.couldntEmptyTrash"), String(e));
+    }
+  },
+
+  setFamilyTags: async (family, tags) => {
+    const prev = get().tags;
+    const next = { ...prev };
+    if (tags.length === 0) delete next[family];
+    else next[family] = tags;
+    set({ tags: next });
+    try {
+      await ipc.setTags(family, tags);
+    } catch (e) {
+      set({ tags: prev });
+      toast.error(t("toast.couldntSaveTags"), String(e));
+    }
+  },
+
+  createCollection: async (name) => {
+    const clean = name.trim();
+    if (!clean) return;
+    if (get().collections[clean]) {
+      toast.error(t("toast.collectionExists"), t("toast.collectionExistsSub", { name: clean }));
+      return;
+    }
+    const prev = get().collections;
+    const pending = get().pendingCollectionFor;
+    const families = pending ? [pending] : [];
+    set({
+      collections: { ...prev, [clean]: families },
+      pendingCollectionFor: null,
+    });
+    try {
+      await ipc.setCollection(clean, families);
+      toast.success(
+        t("toast.createdCollection", { name: clean }),
+        pending ? t("toast.familyAdded", { name: pending }) : t("toast.rightClickToAdd"),
+      );
+    } catch (e) {
+      set({ collections: prev });
+      toast.error(t("toast.couldntCreateCollection"), String(e));
+    }
+  },
+
+  deleteCollection: async (name) => {
+    const prev = get().collections;
+    const next = { ...prev };
+    delete next[name];
+    const nav = get().nav;
+    set({
+      collections: next,
+      nav: nav.kind === "collection" && nav.name === name ? { kind: "library" } : nav,
+    });
+    try {
+      await ipc.deleteCollection(name);
+    } catch (e) {
+      set({ collections: prev });
+      toast.error(t("toast.couldntDeleteCollection"), String(e));
+    }
+  },
+
+  renameCollection: async (from, to) => {
+    const clean = to.trim();
+    if (!clean || clean === from) return;
+    const prev = get().collections;
+    if (prev[clean]) {
+      toast.error(t("toast.nameTaken"), t("toast.nameTakenSub", { name: clean }));
+      return;
+    }
+    const next = { ...prev, [clean]: prev[from] ?? [] };
+    delete next[from];
+    const nav = get().nav;
+    set({
+      collections: next,
+      nav:
+        nav.kind === "collection" && nav.name === from
+          ? { kind: "collection", name: clean }
+          : nav,
+    });
+    try {
+      await ipc.renameCollection(from, clean);
+    } catch (e) {
+      set({ collections: prev });
+      toast.error(t("toast.couldntRenameCollection"), String(e));
+    }
+  },
+
+  toggleFamilyInCollection: async (collection, family) => {
+    const prev = get().collections;
+    const current = prev[collection] ?? [];
+    const families = current.includes(family)
+      ? current.filter((f) => f !== family)
+      : [...current, family];
+    set({ collections: { ...prev, [collection]: families } });
+    try {
+      await ipc.setCollection(collection, families);
+    } catch (e) {
+      set({ collections: prev });
+      toast.error(t("toast.couldntUpdateCollection"), String(e));
+    }
+  },
+
+  addFamiliesToCollection: async (collection, families) => {
+    const prev = get().collections;
+    const current = prev[collection] ?? [];
+    const merged = [...new Set([...current, ...families])];
+    if (merged.length === current.length) return;
+    set({ collections: { ...prev, [collection]: merged } });
+    try {
+      await ipc.setCollection(collection, merged);
+    } catch (e) {
+      set({ collections: prev });
+      toast.error(t("toast.couldntUpdateCollection"), String(e));
+    }
+  },
+
+  toggleFavorite: async (family) => {
+    const prev = get().favorites;
+    const favorite = !prev.includes(family);
+    set({ favorites: favorite ? [...prev, family] : prev.filter((f) => f !== family) });
+    try {
+      await ipc.setFavorite(family, favorite);
+    } catch (e) {
+      set({ favorites: prev });
+      toast.error(t("toast.couldntUpdateFavorites"), String(e));
+    }
+  },
+
+  setFamilyNote: async (family, note) => {
+    const prev = get().notes;
+    const next = { ...prev };
+    if (note.trim()) next[family] = note;
+    else delete next[family];
+    set({ notes: next });
+    try {
+      await ipc.setNote(family, note);
+    } catch (e) {
+      set({ notes: prev });
+      toast.error(t("toast.couldntSaveNote"), String(e));
+    }
+  },
+
+  setFamiliesActiveBulk: async (families, active) => {
+    const paths = [
+      ...new Set(
+        get()
+          .fonts.filter((f) => families.includes(f.family) && f.deactivatable)
+          .map((f) => f.path),
+      ),
+    ];
+    if (paths.length === 0) return;
+    const prevFonts = get().fonts;
+    const prevSession = get().sessionActivated;
+    set({
+      fonts: prevFonts.map((f) =>
+        families.includes(f.family) && f.deactivatable ? { ...f, active } : f,
+      ),
+      sessionActivated: prevSession.filter((n) => !families.includes(n)),
+    });
+    try {
+      await ipc.setFontsActive(paths, active);
+      toast.success(
+        t(active ? "toast.activatedCount" : "toast.deactivatedCount", {
+          count: families.length,
+        }),
+        undefined,
+        undefined,
+        { label: t("toast.undo"), run: () => void get().setFamiliesActiveBulk(families, !active) },
+      );
+    } catch (e) {
+      set({ fonts: prevFonts, sessionActivated: prevSession });
+      toast.error(t("toast.bulkUpdateFailed"), String(e));
+    }
+  },
+
+  applyFamilyInApp: async (family, app) => {
+    const appName = t(`adobe.${app}`);
+    const fam = familiesFor(get().fonts, get().tags).get(family);
+    if (!fam) return;
+    const lead = fam.faces.find((f) => f.style === "Regular") ?? fam.faces[0];
+    if (!lead.postscriptName) {
+      toast.error(t("toast.noPostScriptName"), t("toast.noPostScriptNameSub", { app: appName }));
+      return;
+    }
+
+    if (!fam.active) {
+      if (!fam.deactivatable) return;
+      await get().activateFamilySession(family);
+      if (!familiesFor(get().fonts, get().tags).get(family)?.active) return;
+      await new Promise((r) => setTimeout(r, 600));
+    }
+    try {
+      const outcome = await ipc.applyFontInApp(app, lead.postscriptName, family);
+      if (outcome.startsWith("applied:")) {
+        const count = Number(outcome.slice("applied:".length)) || 1;
+        toast.success(
+          t("toast.appliedInApp", { family, app: appName }),
+          t("toast.appliedLayers", { count }),
+          "success",
+        );
+      } else if (outcome === "created") {
+        toast.success(
+          t("toast.createdInApp", { app: appName }),
+          t("toast.createdInAppSub", { family }),
+          "success",
+        );
+      } else if (outcome === "not-running") {
+        toast.error(t("toast.appNotRunning", { app: appName }), t("toast.appNotRunningSub"));
+      } else if (outcome === "no-document") {
+        toast.error(t("toast.noDocumentInApp", { app: appName }), t("toast.noDocumentInAppSub"));
+      } else if (outcome === "font-not-found") {
+        toast.error(
+          t("toast.fontUnknownToApp", { app: appName, family }),
+          t("toast.fontUnknownToAppSub"),
+        );
+      } else {
+        toast.error(t("toast.couldntApplyIn", { app: appName }), outcome);
+      }
+    } catch (e) {
+      toast.error(t("toast.couldntApplyIn", { app: appName }), String(e));
+    }
+  },
+
+  selectWith: (family, mode, order) => {
+    const { selection, selectedFamily } = get();
+    if (mode === "single" && selectedFamily === family && selection.length <= 1) {
+      set({ selection: [], selectedFamily: null });
+      return;
+    }
+    if (mode === "toggle") {
+      const next = selection.includes(family)
+        ? selection.filter((f) => f !== family)
+        : [...selection, family];
+      set({ selection: next, selectedFamily: family });
+      return;
+    }
+    if (mode === "range" && selectedFamily) {
+      const a = order.indexOf(selectedFamily);
+      const b = order.indexOf(family);
+      if (a !== -1 && b !== -1) {
+        const range = order.slice(Math.min(a, b), Math.max(a, b) + 1);
+        set({ selection: [...new Set([...selection, ...range])], selectedFamily: family });
+        return;
+      }
+    }
+    set({ selection: [family], selectedFamily: family });
+  },
+
+  selectAll: () => {
+    const order = get().visibleOrder;
+    if (order.length === 0) return;
+    set({ selection: [...order], selectedFamily: order[order.length - 1] });
+  },
+
+  openCompare: (families) => set({ compare: families.slice(0, 4), comparePicking: false }),
+  closeCompare: () => set({ compare: null }),
+  setComparePicking: (comparePicking) => set({ comparePicking }),
+
+  togglePick: (family) =>
+    set((s) => ({
+      selection: s.selection.includes(family)
+        ? s.selection.filter((f) => f !== family)
+        : [...s.selection, family],
+    })),
+  setSettingsOpen: (settingsOpen) => set({ settingsOpen }),
+  setHelpOpen: (helpOpen) => set({ helpOpen }),
+  setPaletteOpen: (paletteOpen) => set({ paletteOpen }),
+
+  updateSettings: async (settings) => {
+    const prev = get().settings;
+    set({ settings });
+    try {
+      await ipc.setSettings(settings);
+    } catch (e) {
+      set({ settings: prev });
+      toast.error(t("toast.couldntSaveSettings"), String(e));
+      return;
+    }
+
+    const dirsChanged =
+      prev.extraDirs.length !== settings.extraDirs.length ||
+      prev.extraDirs.some((d, i) => d !== settings.extraDirs[i]) ||
+      prev.libraryDir !== settings.libraryDir ||
+      prev.libraryDirEnabled !== settings.libraryDirEnabled;
+    if (!dirsChanged || get().phase === "scanning") return;
+    const before = get().fonts.length;
+    await get().rescan();
+    if (get().phase !== "ready") return;
+    const after = get().fonts.length;
+    const added = settings.extraDirs.length > prev.extraDirs.length;
+    toast.success(
+      t("toast.libraryUpdated"),
+      after > before
+        ? t("toast.newFontsFound", { count: after - before })
+        : after < before
+          ? t("toast.fontsRemoved", { count: before - after })
+          : added
+            ? t("toast.noFontsInFolder")
+            : t("toast.libraryUnchanged"),
+    );
+  },
+
+  pollAffinityLink: async () => {
+    try {
+      const link = await ipc.affinityLink();
+      if (link) set({ affinityConnection: link });
+    } catch {
+      return;
+    }
+  },
+  refreshAffinityConnection: async () => {
+    try {
+      set({ affinityConnection: await ipc.affinityConnection() });
+    } catch {
+      set({
+        affinityConnection: { reachable: false, version: null, docCount: 0, error: null },
+      });
+    }
+  },
+
+  loadOnlineCatalogue: async (force) => {
+    if (!get().settings.onlineFontsEnabled) return;
+    if (get().onlineLoading) return;
+    set({ onlineLoading: true, onlineError: null });
+    try {
+      const cat = await ipc.onlineCatalogue(force);
+      set({ onlineFamilies: cat.families, onlineFetchedAt: cat.fetchedAt, onlineLoading: false });
+    } catch (e) {
+      set({ onlineLoading: false, onlineError: String(e) });
+    }
+  },
+
+  setOnlineQuery: (onlineQuery) => set({ onlineQuery }),
+  setOnlineCategory: (onlineCategory) => set({ onlineCategory }),
+  setOnlineLicense: (onlineLicense) => set({ onlineLicense }),
+  setOnlineVariableOnly: (onlineVariableOnly) => set({ onlineVariableOnly }),
+
+  openOnlineFamily: async (id) => {
+    set({ onlineDetailLoading: true, onlineDetail: null, onlinePreviewPath: null });
+    try {
+      const detail = await ipc.onlineFamily(id);
+      set({ onlineDetail: detail, onlineDetailLoading: false });
+    } catch (e) {
+      set({ onlineDetailLoading: false });
+      toast.error(t("toast.onlineDetailFailed"), String(e));
+      return;
+    }
+    try {
+      const path = await ipc.onlinePreview(id);
+      if (get().onlineDetail?.id === id) set({ onlinePreviewPath: path });
+    } catch {
+      set({ onlinePreviewPath: null });
+    }
+  },
+
+  closeOnlineFamily: () => {
+    const { onlineDetail, onlineDownloading } = get();
+    if (onlineDetail && onlineDownloading !== onlineDetail.id) {
+      void ipc.onlineClearStaging(onlineDetail.id);
+    }
+    set({ onlineDetail: null, onlinePreviewPath: null });
+  },
+
+  installOnlineFamily: async (id) => {
+    if (get().onlineDownloading) return;
+    set({ onlineDownloading: id, onlineProgress: null });
+    try {
+      const res = await ipc.onlineDownload(id);
+      await get().installPaths(res.paths, "move");
+      const existing = get().tags[res.family] ?? [];
+      if (!existing.includes("Online")) {
+        await get().setFamilyTags(res.family, [...existing, "Online"]);
+      }
+      await ipc.onlineClearStaging(id);
+      set({ onlineDetail: null, onlinePreviewPath: null });
+    } catch (e) {
+      toast.error(t("toast.onlineDownloadFailed"), String(e));
+    } finally {
+      set({ onlineDownloading: null, onlineProgress: null });
+    }
+  },
+
+  setMotionPref: (motionPref) => {
+    set({ motionPref });
+    applyMotionPref(motionPref);
+    persistPrefs(get);
+  },
+
+  setSoundPref: (soundPref) => {
+    set({ soundPref });
+    setSoundLevel(soundPref);
+    persistPrefs(get);
+  },
+
+  setThemePref: (themePref) => {
+    set({ themePref });
+    applyTheme(themePref, true);
+    persistPrefs(get);
+  },
+
+  setLocalePref: (localePref) => {
+    set({ localePref });
+    applyLocalePref(localePref);
+    persistPrefs(get);
+  },
+
+  setBulkTagFor: (bulkTagFor) => set({ bulkTagFor }),
+
+  startTour: () => set({ tourStep: 0 }),
+  setTourStep: (tourStep) => set({ tourStep }),
+  endTour: () => {
+    set({ tourStep: null, onboarded: true, selectedFamily: null, selection: [] });
+    persistPrefs(get);
+  },
+
+  applyTagToFamilies: async (tag, families) => {
+    const clean = tag.trim().toLowerCase();
+    if (!clean) return;
+    const all = families.every((f) => (get().tags[f] ?? []).includes(clean));
+    for (const family of families) {
+      const current = get().tags[family] ?? [];
+      const next = all
+        ? current.filter((t) => t !== clean)
+        : current.includes(clean)
+          ? current
+          : [...current, clean];
+      if (next !== current) await get().setFamilyTags(family, next);
+    }
+  },
+
+  setDuplicateReport: (duplicateReport) => set({ duplicateReport }),
+
+  setSampleText: (sampleText) => {
+    set({ sampleText });
+    persistPrefs(get);
+  },
+  setSizeIndex: (sizeIndex) => {
+    set({ sizeIndex });
+    persistPrefs(get);
+  },
+  setViewMode: (viewMode) => {
+    set({ viewMode });
+    persistPrefs(get);
+  },
+  setSort: (sort) => {
+    set({ sort });
+    persistPrefs(get);
+  },
+  setSearch: (search) => set({ search }),
+  toggleClassFilter: (c) => {
+    const cur = get().classFilter;
+    set({ classFilter: cur.includes(c) ? cur.filter((x) => x !== c) : [...cur, c] });
+  },
+  toggleScriptFilter: (s) => {
+    const cur = get().scriptFilter;
+    set({ scriptFilter: cur.includes(s) ? cur.filter((x) => x !== s) : [...cur, s] });
+  },
+  setVariableOnly: (variableOnly) => set({ variableOnly }),
+  toggleFormat: (f) => {
+    const cur = get().formatFilter;
+    set({ formatFilter: cur.includes(f) ? cur.filter((x) => x !== f) : [...cur, f] });
+  },
+  toggleFeature: (tag) => {
+    const cur = get().featureFilter;
+    set({ featureFilter: cur.includes(tag) ? cur.filter((x) => x !== tag) : [...cur, tag] });
+  },
+  setInstallFilter: (v) => {
+    set({ installFilter: v });
+  },
+  setCharFilter: (ch) => {
+    const first = [...ch.trim()][0] ?? "";
+    if (!first) {
+      set({ charFilter: "", charMatches: null, charSearching: false });
+      return;
+    }
+    const cp = first.codePointAt(0);
+    if (cp === undefined) return;
+    set({ charFilter: first, charSearching: true });
+    const paths = [...new Set(get().fonts.map((f) => f.path))];
+    void ipc
+      .fontsWithChar(paths, cp)
+      .then((hits) => {
+        if (get().charFilter !== first) return;
+        const hitSet = new Set(hits);
+        const families = new Set(
+          get().fonts.filter((f) => hitSet.has(f.path)).map((f) => f.family),
+        );
+        set({ charMatches: [...families], charSearching: false });
+      })
+      .catch((e) => {
+        if (get().charFilter !== first) return;
+        set({ charMatches: [], charSearching: false });
+        toast.error(t("toast.charSearchFailed"), String(e));
+      });
+  },
+  toggleSection: (id) => {
+    const cur = get().collapsedSections;
+    set({ collapsedSections: cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id] });
+    persistPrefs(get);
+  },
+  setTransparencyPref: (transparencyPref) => {
+    set({ transparencyPref });
+    applyTransparencyPref(transparencyPref);
+    persistPrefs(get);
+  },
+  setCloseToTray: (closeToTray) => {
+    set({ closeToTray });
+    persistPrefs(get);
+  },
+  setStartMinimized: (startMinimized) => {
+    set({ startMinimized });
+    persistPrefs(get);
+  },
+  setUiScale: (uiScale) => {
+    set({ uiScale });
+    persistPrefs(get);
+    void ipc
+      .setUiScale(uiScale === "auto" ? null : uiScale)
+      .then((applied) => set({ appliedScale: applied }))
+      .catch(() => {
+
+      });
+  },
+  setToggleableOnly: (toggleableOnly) => set({ toggleableOnly }),
+
+  exportLibraryData: async (dest) => {
+    const { tags, collections, favorites, notes } = get();
+    const payload = {
+      app: "Fontora",
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      tags,
+      collections,
+      favorites,
+      notes,
+    };
+    try {
+      await ipc.writeTextFile(dest, JSON.stringify(payload, null, 2));
+      toast.success(t("toast.libraryDataExported"), dest, "install");
+    } catch (e) {
+      toast.error(t("toast.exportFailed"), String(e));
+    }
+  },
+
+  importLibraryData: async (src) => {
+    try {
+      const raw: unknown = JSON.parse(await ipc.readTextFile(src));
+      const d = raw as Partial<{
+        app: string;
+        tags: Record<string, string[]>;
+        collections: Record<string, string[]>;
+        favorites: string[];
+        notes: Record<string, string>;
+      }>;
+      // 0.8.0 起软件叫 Fontora，旧名字导出的文件仍然认。
+      if (d?.app !== "Fontora" && d?.app !== "ZFontManager") {
+        toast.error(t("toast.notAnExport"), t("toast.notAnExportSub"));
+        return;
+      }
+      let touched = 0;
+      const state = get();
+      if (d.tags) {
+        for (const [family, list] of Object.entries(d.tags)) {
+          if (!Array.isArray(list)) continue;
+          const existing = state.tags[family] ?? [];
+          const merged = [...new Set([...existing, ...list.map(String)])];
+          if (merged.length === existing.length) continue;
+          await get().setFamilyTags(family, merged);
+          touched++;
+        }
+      }
+      if (d.collections) {
+        for (const [name, members] of Object.entries(d.collections)) {
+          if (!Array.isArray(members)) continue;
+          const existing = get().collections[name];
+          const merged = [...new Set([...(existing ?? []), ...members.map(String)])];
+          if (existing && merged.length === existing.length) continue;
+          set({ collections: { ...get().collections, [name]: merged } });
+          await ipc.setCollection(name, merged);
+          touched++;
+        }
+      }
+      if (Array.isArray(d.favorites)) {
+        for (const family of d.favorites.map(String)) {
+          if (!get().favorites.includes(family)) {
+            set({ favorites: [...get().favorites, family] });
+            await ipc.setFavorite(family, true);
+            touched++;
+          }
+        }
+      }
+      if (d.notes) {
+        for (const [family, note] of Object.entries(d.notes)) {
+          if (typeof note !== "string" || get().notes[family]) continue;
+          await get().setFamilyNote(family, note);
+          touched++;
+        }
+      }
+      toast.success(
+        t("toast.libraryDataImported"),
+        t("toast.entriesMerged", { count: touched }),
+        "restore",
+      );
+    } catch (e) {
+      toast.error(t("toast.importFailed"), String(e));
+    }
+  },
+  setNav: (nav) => set({ nav, selectedFamily: null, selection: [] }),
+  select: (selectedFamily) =>
+    set({ selectedFamily, selection: selectedFamily ? [selectedFamily] : [] }),
+  openFontDetail: (fontDetailFamily) => {
+    set({ fontDetailFamily });
+    if (fontDetailFamily) get().touchUsage([fontDetailFamily], "view");
+  },
+  closeFontDetail: () => set({ fontDetailFamily: null }),
+  openExport: (names, label) => set({ exportScope: { names, label } }),
+  closeExport: () => set({ exportScope: null }),
+
+  reloadAssets: async () => {
+    try {
+      const [tags, collections, favorites, notes, ratings, aliases, settings, trash] =
+        await Promise.all([
+          ipc.getTags(),
+          ipc.getCollections(),
+          ipc.getFavorites(),
+          ipc.getNotes(),
+          ipc.getRatings(),
+          ipc.getAliases(),
+          ipc.getSettings(),
+          ipc.listTrash(),
+        ]);
+      set({ tags, collections, favorites, notes, ratings, aliases, settings, trash });
+      get().refreshPinyin();
+      void get().loadUsage();
+    } catch (e) {
+      toast.error(t("toast.importFailed"), String(e));
+    }
+  },
+
+  loadUsage: async () => {
+    set({ usageLoading: true });
+    try {
+      const rows = await ipc.fontUsage();
+      const usage: Record<string, UsageRow> = {};
+      for (const row of rows) usage[row.family] = row;
+      set({ usage, usageLoading: false });
+    } catch {
+      set({ usageLoading: false });
+    }
+  },
+
+  touchUsage: (families, kind) => {
+    const names = [...new Set(families.filter(Boolean))];
+    if (names.length === 0) return;
+    const now = Math.floor(Date.now() / 1000);
+    const usage = { ...get().usage };
+    for (const family of names) {
+      const cur: UsageRow =
+        usage[family] ??
+        {
+          family,
+          views: 0,
+          lastView: 0,
+          installs: 0,
+          lastInstall: 0,
+          refs: 0,
+          lastRef: 0,
+          firstSeen: 0,
+        };
+      const next: UsageRow = { ...cur, firstSeen: cur.firstSeen || now };
+      if (kind === "view") {
+        next.views += 1;
+        next.lastView = now;
+      } else if (kind === "install") {
+        next.installs += 1;
+        next.lastInstall = now;
+      } else {
+        next.refs += 1;
+        next.lastRef = now;
+      }
+      usage[family] = next;
+    }
+    set({ usage });
+    void ipc.fontUsageTouch(names, kind).catch(() => {});
+  },
+
+  clearUsage: async () => {
+    const prev = get().usage;
+    set({ usage: {} });
+    try {
+      await ipc.fontUsageClear();
+      toast.success(t("usage.cleared"), undefined, "trash");
+    } catch (e) {
+      set({ usage: prev });
+      toast.error(t("toast.couldntSaveSettings"), String(e));
+    }
+  },
+
+  setRating: (family, score) => {
+    const prev = get().ratings;
+    const next = { ...prev };
+    if (score >= 1 && score <= 5) next[family] = score;
+    else delete next[family];
+    set({ ratings: next });
+    void ipc.setRating(family, score >= 1 && score <= 5 ? score : 0).catch((e) => {
+      set({ ratings: prev });
+      toast.error(t("toast.couldntSaveSettings"), String(e));
+    });
+  },
+
+  setRatingMany: (families, score) => {
+    const names = [...new Set(families.filter(Boolean))];
+    if (names.length === 0) return;
+    const prev = get().ratings;
+    const next = { ...prev };
+    for (const family of names) {
+      if (score >= 1 && score <= 5) next[family] = score;
+      else delete next[family];
+    }
+    set({ ratings: next });
+    for (const family of names) {
+      void ipc.setRating(family, score >= 1 && score <= 5 ? score : 0).catch((e) => {
+        set({ ratings: prev });
+        toast.error(t("toast.couldntSaveSettings"), String(e));
+      });
+    }
+  },
+
+  setRatingFilter: (ratingFilter) => set({ ratingFilter }),
+
+  refreshPinyin: () => {
+    const { fonts, aliases } = get();
+    const names = new Set<string>();
+    for (const face of fonts) names.add(face.family);
+    for (const list of Object.values(aliases)) {
+      for (const alias of list) names.add(alias);
+    }
+    if (names.size === 0) {
+      set({ pinyinKeys: {} });
+      return;
+    }
+    void ipc
+      .pinyinKeys([...names])
+      .then((pinyinKeys) => set({ pinyinKeys }))
+      .catch(() => {});
+  },
+
+  openAlias: (aliasFor) => set({ aliasFor }),
+  closeAlias: () => set({ aliasFor: null }),
+
+  saveAliases: async (family, list) => {
+    const prev = get().aliases;
+    const clean = [...new Set(list.map((a) => a.trim()).filter((a) => a && a !== family))].slice(0, 8);
+    const next = { ...prev };
+    if (clean.length === 0) delete next[family];
+    else next[family] = clean;
+    set({ aliases: next });
+    try {
+      await ipc.setAliases(family, clean);
+      get().refreshPinyin();
+    } catch (e) {
+      set({ aliases: prev });
+      toast.error(t("toast.couldntSaveSettings"), String(e));
+    }
+  },
+}));
+
+const styleOrder = (f: FontFace) => f.weight * 2 + (f.italic ? 1 : 0);
+
+export function computeFamilies(
+  fonts: FontFace[],
+  tags: Record<string, string[]>,
+): Map<string, Family> {
+  const map = new Map<string, Family>();
+  for (const f of fonts) {
+    let fam = map.get(f.family);
+    if (!fam) {
+      fam = {
+        name: f.family,
+        faces: [],
+        formats: [],
+        isVariable: false,
+        active: false,
+        deactivatable: false,
+        tags: tags[f.family] ?? [],
+        totalSize: 0,
+        foundry: null,
+        classification: "unknown",
+        scripts: [],
+        features: [],
+        glyphCount: 0,
+      };
+      map.set(f.family, fam);
+    }
+    fam.faces.push(f);
+    if (!fam.formats.includes(f.format)) fam.formats.push(f.format);
+    fam.isVariable ||= f.isVariable;
+    fam.foundry ??= f.foundry;
+
+    if (fam.classification === "unknown") fam.classification = f.classification;
+    for (const s of f.scripts ?? []) {
+      if (!fam.scripts.includes(s)) fam.scripts.push(s);
+    }
+    for (const ft of f.features ?? []) {
+      if (!fam.features.includes(ft)) fam.features.push(ft);
+    }
+    fam.glyphCount = Math.max(fam.glyphCount, f.glyphCount ?? 0);
+    fam.active ||= f.active;
+    fam.deactivatable ||= f.deactivatable;
+    fam.totalSize += f.fileSize;
+  }
+  for (const fam of map.values()) {
+    fam.faces.sort((a, b) => styleOrder(a) - styleOrder(b));
+  }
+  return map;
+}
+
+export function selectVisibleFamilies(s: {
+  fonts: FontFace[];
+  tags: Record<string, string[]>;
+  collections: Record<string, string[]>;
+  favorites: string[];
+  sessionActivated: string[];
+  notes: Record<string, string>;
+  search: string;
+  classFilter: Classification[];
+  scriptFilter: string[];
+  formatFilter: FontFormat[];
+  featureFilter: string[];
+  installFilter: InstallFilter;
+  charFilter: string;
+  charMatches: string[] | null;
+  variableOnly: boolean;
+  toggleableOnly: boolean;
+  nav: Nav;
+  sort: SortMode;
+  usage: Record<string, UsageRow>;
+  ratings: Record<string, number>;
+  aliases: Record<string, string[]>;
+  pinyinKeys: Record<string, string[]>;
+  ratingFilter: RatingFilter;
+}): Family[] {
+  const families = [...familiesFor(s.fonts, s.tags).values()];
+  const q = s.search.trim().toLowerCase();
+  let out = families;
+  if (s.classFilter.length > 0) {
+    out = out.filter((f) => s.classFilter.includes(f.classification));
+  }
+  if (s.scriptFilter.length > 0) {
+    out = out.filter((f) => s.scriptFilter.every((sc) => f.scripts.includes(sc)));
+  }
+  if (s.formatFilter.length > 0) {
+    out = out.filter((f) => f.formats.some((fmt) => s.formatFilter.includes(fmt as FontFormat)));
+  }
+  if (s.featureFilter.length > 0) {
+    out = out.filter((f) => s.featureFilter.every((tag) => f.features.includes(tag)));
+  }
+  if (s.installFilter === "installed") {
+    out = out.filter((f) => f.active);
+  }
+  if (s.installFilter === "notInstalled") {
+    out = out.filter((f) => !f.active);
+  }
+  if (s.charFilter) {
+    const hits = s.charMatches;
+    out = hits === null ? [] : out.filter((f) => hits.includes(f.name));
+  }
+  if (s.variableOnly) {
+    out = out.filter((f) => f.isVariable);
+  }
+  if (s.toggleableOnly) {
+    out = out.filter((f) => f.deactivatable);
+  }
+  if (s.ratingFilter === "top") {
+    out = out.filter((f) => (s.ratings[f.name] ?? 0) >= 4);
+  }
+  if (s.ratingFilter === "none") {
+    out = out.filter((f) => !(s.ratings[f.name] ?? 0));
+  }
+  if (s.nav.kind === "tag") {
+    const tag = s.nav.tag;
+    out = out.filter((f) => f.tags.includes(tag));
+  }
+  if (s.nav.kind === "collection") {
+    const members = s.collections[s.nav.name] ?? [];
+    out = out.filter((f) => members.includes(f.name));
+  }
+  if (s.nav.kind === "favorites") {
+    out = out.filter((f) => s.favorites.includes(f.name));
+  }
+  if (s.nav.kind === "installed") {
+    out = out.filter((f) => f.active && !s.sessionActivated.includes(f.name));
+  }
+  if (s.nav.kind === "activatedSession") {
+    out = out.filter((f) => s.sessionActivated.includes(f.name));
+  }
+  if (s.nav.kind === "notInstalled") {
+    out = out.filter((f) => !f.active);
+  }
+  if (q) {
+    // 拼音只在「纯字母数字」且至少两个字符时参与匹配 —— 单个字母会命中一切。
+    const lettersOnly = /^[a-z0-9]+$/.test(q);
+    const pinyinHit = (keys: string[] | undefined) =>
+      lettersOnly && q.length >= 2 && (keys ?? []).some((k) => k.includes(q));
+    out = out.filter((f) => {
+      const aliases = s.aliases[f.name] ?? [];
+      return (
+        f.name.toLowerCase().includes(q) ||
+        f.tags.some((t) => t.toLowerCase().includes(q)) ||
+        f.formats.some((fmt) => fmt.includes(q)) ||
+        (f.foundry?.toLowerCase().includes(q) ?? false) ||
+        (s.notes[f.name]?.toLowerCase().includes(q) ?? false) ||
+        aliases.some((a) => a.toLowerCase().includes(q)) ||
+        pinyinHit(s.pinyinKeys[f.name]) ||
+        aliases.some((a) => pinyinHit(s.pinyinKeys[a]))
+      );
+    });
+  }
+  const lastUsed = (name: string) => {
+    const row = s.usage[name];
+    return row ? Math.max(row.lastView, row.lastInstall, row.lastRef) : 0;
+  };
+  const addedAt = (fam: Family) =>
+    fam.faces.reduce((newest, face) => Math.max(newest, face.modified ?? 0), 0);
+
+  switch (s.sort) {
+    case "recent":
+      out.sort((a, b) => lastUsed(b.name) - lastUsed(a.name) || a.name.localeCompare(b.name));
+      break;
+    case "added":
+      out.sort((a, b) => addedAt(b) - addedAt(a) || a.name.localeCompare(b.name));
+      break;
+    case "rating":
+      // 没评分的垫底，同分按名字。
+      out.sort(
+        (a, b) =>
+          (s.ratings[b.name] ?? 0) - (s.ratings[a.name] ?? 0) || a.name.localeCompare(b.name),
+      );
+      break;
+    case "styles":
+      out.sort((a, b) => b.faces.length - a.faces.length || a.name.localeCompare(b.name));
+      break;
+    case "size":
+      out.sort((a, b) => b.totalSize - a.totalSize || a.name.localeCompare(b.name));
+      break;
+    case "glyphs":
+      out.sort((a, b) => b.glyphCount - a.glyphCount || a.name.localeCompare(b.name));
+      break;
+    default:
+      out.sort((a, b) => a.name.localeCompare(b.name));
+  }
+  return out;
+}
+
+export function allTags(tags: Record<string, string[]>): Map<string, number> {
+  const m = new Map<string, number>();
+  for (const list of Object.values(tags)) {
+    for (const t of list) m.set(t, (m.get(t) ?? 0) + 1);
+  }
+  return new Map([...m.entries()].sort((a, b) => a[0].localeCompare(b[0])));
+}
+
+export interface FontConflict {
+  key: string;
+  paths: string[];
+}
+
+const familyCache = new WeakMap<FontFace[], WeakMap<object, Map<string, Family>>>();
+
+export function familiesFor(
+  fonts: FontFace[],
+  tags: Record<string, string[]>,
+): Map<string, Family> {
+  let byTags = familyCache.get(fonts);
+  if (!byTags) {
+    byTags = new WeakMap();
+    familyCache.set(fonts, byTags);
+  }
+  let result = byTags.get(tags);
+  if (!result) {
+    result = computeFamilies(fonts, tags);
+    byTags.set(tags, result);
+  }
+  return result;
+}
+
+const conflictCache = new WeakMap<FontFace[], Map<string, FontConflict[]>>();
+
+const activeConflictCache = new WeakMap<FontFace[], Map<string, FontConflict[]>>();
+
+/** Conflicts among ACTIVE fonts only: these are the ones apps can actually see. */
+export function activeConflictsFor(fonts: FontFace[]): Map<string, FontConflict[]> {
+  let cached = activeConflictCache.get(fonts);
+  if (!cached) {
+    cached = computeConflicts(fonts.filter((f) => f.active));
+    activeConflictCache.set(fonts, cached);
+  }
+  return cached;
+}
+
+export function conflictsFor(fonts: FontFace[]): Map<string, FontConflict[]> {
+  let cached = conflictCache.get(fonts);
+  if (!cached) {
+    cached = computeConflicts(fonts);
+    conflictCache.set(fonts, cached);
+  }
+  return cached;
+}
+
+export function computeConflicts(fonts: FontFace[]): Map<string, FontConflict[]> {
+  const byKey = new Map<string, { paths: Set<string>; families: Set<string> }>();
+  for (const f of fonts) {
+    const key = f.postscriptName ?? `${f.family} ${f.style}`;
+    let entry = byKey.get(key);
+    if (!entry) {
+      entry = { paths: new Set(), families: new Set() };
+      byKey.set(key, entry);
+    }
+    entry.paths.add(f.path);
+    entry.families.add(f.family);
+  }
+  const out = new Map<string, FontConflict[]>();
+  for (const [key, { paths, families }] of byKey) {
+    if (paths.size < 2) continue;
+    for (const fam of families) {
+      const list = out.get(fam) ?? [];
+      list.push({ key, paths: [...paths] });
+      out.set(fam, list);
+    }
+  }
+  return out;
+}
+

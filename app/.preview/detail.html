@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="utf-8">
+<title>详情页预览</title>
+<link rel="stylesheet" href="../src/design/tokens.css">
+<link rel="stylesheet" href="../src/app.css">
+<style>
+  html, body { margin: 0; height: 100%; }
+  body { background: var(--canvas); font-family: var(--font-ui); color: var(--text-primary); }
+  #root { position: relative; height: 100vh; }
+</style>
+</head>
+<body>
+<div id="root">
+  <div class="fd-page">
+    <header class="fd-page-head">
+      <button class="fd-back"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M19 12H5M12 19l-7-7 7-7"/></svg><span>返回</span></button>
+      <span class="fd-page-sep"></span>
+      <div class="fd-page-id">
+        <span class="fd-badge">TTF</span>
+        <span class="fd-file fd-mono" title="C:\Windows\Fonts\simfang.ttf">simfang.ttf</span>
+      </div>
+      <div class="fd-actions">
+        <button class="fd-icon-btn"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 2l3 6.5 7 1-5 5 1.2 7L12 18l-6.2 3.5L7 14.5l-5-5 7-1z"/></svg></button>
+        <button class="fd-icon-btn"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 7h18v12H3z"/></svg></button>
+      </div>
+    </header>
+
+    <div class="fd-page-body">
+      <div class="fd-page-inner">
+        <div class="fd-hero">
+          <h1 class="fd-hero-title">方正仿宋简体</h1>
+          <div class="fd-hero-meta">
+            <span class="fd-hero-chip">书写</span>
+            <span>Regular</span>
+            <span class="tabular">8,106 字形</span>
+            <span class="tabular">10.1 MB</span>
+          </div>
+        </div>
+
+        <div class="fd-sections">
+          <div>
+            <section class="fd-section">
+              <header class="fd-section-head">
+                <span class="fd-section-index tabular">01</span>
+                <h2>字体介绍</h2>
+                <span class="fd-section-rule"></span>
+              </header>
+              <div class="fd-intro">
+                <div class="fd-intro-block lead">
+                  <div class="fd-intro-label">字体概况</div>
+                  <p class="fd-intro-body">「方正仿宋简体」是一款书写字体，当前查看的是 Regular 字重/样式。文件为 TrueType 格式，体积 10.1 MB，共收录 8,106 个字形。</p>
+                </div>
+                <div class="fd-intro-block">
+                  <div class="fd-intro-label">字符覆盖</div>
+                  <p class="fd-intro-body">字体共映射 8,097 个 Unicode 字符，其中汉字 6,763 个（基本区 6,758、扩展 A 5）。对照 GB/T 2312 的 6763 字，覆盖 6763 个；现代汉语常用字表 3500 字覆盖 3500 个。</p>
+                </div>
+                <div class="fd-intro-block">
+                  <div class="fd-intro-label">排版能力</div>
+                  <p class="fd-intro-body">支持的文字系统：拉丁字母、中日韩汉字。 该字体是静态字重，不含可变轴。 未检测到额外的 OpenType 排版特性。</p>
+                </div>
+                <div class="fd-intro-block">
+                  <div class="fd-intro-label">出处与版本</div>
+                  <p class="fd-intro-body">字体版本 Version 1.00。发行厂商为 北京北大方正电子有限公司。</p>
+                </div>
+              </div>
+              <div class="fd-specs">
+                <button class="fd-fold">文件信息 · 展开</button>
+              </div>
+            </section>
+          </div>
+
+          <div>
+            <section class="fd-section">
+              <header class="fd-section-head">
+                <span class="fd-section-index tabular">02</span>
+                <h2>字体授权</h2>
+                <span class="fd-section-rule"></span>
+              </header>
+              <div class="fd-verdict">
+                <div class="fd-verdict-main">
+                  <span class="fd-verdict-label">嵌入许可</span>
+                  <span class="fd-verdict-value">允许在文档中自由嵌入</span>
+                </div>
+                <span class="fd-verdict-code tabular">fsType 0x0000</span>
+              </div>
+              <div class="fd-lists">
+                <div class="fd-list fd-list-allow">
+                  <div class="fd-list-head">✓ 可以</div>
+                  <ul><li>用于任何文档</li><li>随文档一起分发</li></ul>
+                </div>
+                <div class="fd-list fd-list-deny">
+                  <div class="fd-list-head">✕ 不可以</div>
+                  <ul><li>单独转售字体文件</li></ul>
+                </div>
+              </div>
+            </section>
+          </div>
+
+          <div>
+            <section class="fd-section">
+              <header class="fd-section-head">
+                <span class="fd-section-index tabular">03</span>
+                <h2>字数统计</h2>
+                <span class="fd-section-rule"></span>
+              </header>
+              <div class="fd-stat-chips">
+                <div class="fd-stat primary"><span class="fd-stat-value tabular">6,763</span><span class="fd-stat-label">汉字</span></div>
+                <div class="fd-stat primary"><span class="fd-stat-value tabular">8,097</span><span class="fd-stat-label">Unicode 字符</span></div>
+                <div class="fd-stat"><span class="fd-stat-value tabular">6,758</span><span class="fd-stat-label">基本区</span></div>
+                <div class="fd-stat"><span class="fd-stat-value tabular">5</span><span class="fd-stat-label">扩展区</span></div>
+                <div class="fd-stat"><span class="fd-stat-value tabular">0</span><span class="fd-stat-label">假名</span></div>
+                <div class="fd-stat"><span class="fd-stat-value tabular">94</span><span class="fd-stat-label">拉丁字母</span></div>
+              </div>
+              <p class="fd-section-note">统计只算 cmap 里真正映射到字形的码位，去重后计数。</p>
+              <div class="fd-cov-columns">
+                <div class="fd-cov-col">
+                  <div class="fd-col-head">对照字表</div>
+                  <div class="fd-cov-group">
+                    <div class="fd-cov-row"><span class="fd-cov-label">GB/T 2312</span><span class="fd-cov-count tabular">6763<span class="fd-cov-total"> / 6763</span></span><span class="fd-cov-bar"><span style="width:100%"></span></span></div>
+                    <div class="fd-cov-row"><span class="fd-cov-label">现代汉语常用字表</span><span class="fd-cov-count tabular">3500<span class="fd-cov-total"> / 3500</span></span><span class="fd-cov-bar"><span style="width:100%"></span></span></div>
+                  </div>
+                </div>
+                <div class="fd-cov-col">
+                  <div class="fd-col-head">Unicode 区段</div>
+                  <div class="fd-cov-group">
+                    <div class="fd-cov-row"><span class="fd-cov-label">CJK 统一表意文字</span><span class="fd-cov-count tabular">6758<span class="fd-cov-total"> / 20992</span></span><span class="fd-cov-bar"><span style="width:32%"></span></span></div>
+                    <div class="fd-cov-row"><span class="fd-cov-label">CJK 扩展 A</span><span class="fd-cov-count tabular">5<span class="fd-cov-total"> / 6592</span></span><span class="fd-cov-bar"><span style="width:1%"></span></span></div>
+                  </div>
+                </div>
+              </div>
+            </section>
+          </div>
+
+          <div>
+            <section class="fd-section">
+              <header class="fd-section-head">
+                <span class="fd-section-index tabular">04</span>
+                <h2>字体样例</h2>
+                <span class="fd-section-rule"></span>
+                <div class="fd-sample-tools">
+                  <label class="fd-size"><span>字号</span><input type="range" min="70" max="160" value="100"><span class="tabular">100%</span></label>
+                </div>
+              </header>
+              <div class="fd-samples" style="font-family: 'FangSong', serif;">
+                <div class="fd-sample">
+                  <div class="fd-sample-label">标题 · <span class="tabular">40px</span></div>
+                  <div class="fd-sample-text" style="font-size:40px">永和九年，岁在癸丑</div>
+                </div>
+                <div class="fd-sample">
+                  <div class="fd-sample-label">正文 · <span class="tabular">26px</span></div>
+                  <div class="fd-sample-text" style="font-size:26px">落霞与孤鹜齐飞，秋水共长天一色</div>
+                </div>
+              </div>
+            </section>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

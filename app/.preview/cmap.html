@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="utf-8">
+<title>字符地图预览</title>
+<link rel="stylesheet" href="../src/design/tokens.css">
+<link rel="stylesheet" href="../src/app.css">
+<style>
+  html, body { margin: 0; height: 100%; }
+  body { background: var(--canvas); font-family: var(--font-ui); color: var(--text-primary); }
+  #root { position: relative; height: 100vh; }
+  .fd-mono { font-family: var(--font-mono); }
+  .tabular { font-variant-numeric: tabular-nums; }
+  .cm-panel, .hp-panel { border-radius: 16px; }
+  .cm-backdrop, .hp-backdrop { align-items: center; }
+</style>
+</head>
+<body>
+<div id="root">
+
+<div class="cm-backdrop">
+  <div class="cm-panel">
+    <header class="cm-head">
+      <span class="cm-head-icon">▦</span>
+      <div class="cm-head-text">
+        <div class="cm-title">字符地图</div>
+        <div class="cm-sub">微软雅黑 · 共 27,845 个字符 · 支持连字</div>
+      </div>
+      <button class="cm-close">✕</button>
+    </header>
+    <div class="cm-toolbar">
+      <label class="cm-search"><span style="font-size:13px">⌕</span><input value="中" readonly></label>
+      <div class="cm-verdict ok">
+        <span>✓</span>
+        <span class="cm-verdict-char" style="font-family:'Microsoft YaHei'">中</span>
+        <span>有</span>
+        <span class="cm-verdict-code tabular">U+4E2D</span>
+        <button class="cm-jump">定位过去</button>
+      </div>
+    </div>
+    <div class="cm-body">
+      <aside class="cm-blocks"><button class="cm-block "><span class="cm-block-label">基本拉丁字母</span><span class="cm-block-count tabular">43</span></button><button class="cm-block "><span class="cm-block-label">拉丁-1 补充</span><span class="cm-block-count tabular">96</span></button><button class="cm-block "><span class="cm-block-label">通用标点</span><span class="cm-block-count tabular">24</span></button><button class="cm-block "><span class="cm-block-label">CJK 符号与标点</span><span class="cm-block-count tabular">62</span></button><button class="cm-block "><span class="cm-block-label">平假名</span><span class="cm-block-count tabular">93</span></button><button class="cm-block "><span class="cm-block-label">片假名</span><span class="cm-block-count tabular">96</span></button><button class="cm-block "><span class="cm-block-label">CJK 扩展 A</span><span class="cm-block-count tabular">236</span></button><button class="cm-block on"><span class="cm-block-label">中日韩统一表意文字</span><span class="cm-block-count tabular">20902</span></button><button class="cm-block "><span class="cm-block-label">私用区</span><span class="cm-block-count tabular">11</span></button><p class="cm-outside">另有 1,204 个字符不在以上区段内。</p></aside>
+      <div class="cm-main">
+        <div class="cm-main-head">
+          <span class="cm-main-title">中日韩统一表意文字</span>
+          <span class="cm-main-range tabular">U+4E00 – U+9FFF</span>
+          <span class="cm-main-count tabular">20,902 / 20,992</span>
+        </div>
+        <div class="cm-grid" style="overflow:hidden;padding-bottom:0">
+          <div class="cm-grid-space" style="height:200px"><div class="cm-row" style="top:0px;height:38px;grid-template-columns:repeat(24,1fr)"><button class="cm-cell on" style="font-family: 'Microsoft YaHei'">的</button><button class="cm-cell on" style="font-family: 'Microsoft YaHei'">一</button><button class="cm-cell on" style="font-family: 'Microsoft YaHei'">是</button><button class="cm-cell on" style="font-family: 'Microsoft YaHei'">不</button><span class="cm-cell off"></span><button class="cm-cell on" style="font-family: 'Microsoft YaHei'">人</button><span class="cm-cell off"></span><span class="cm-cell off"></span><button class="cm-cell on" style="font-family: 'Microsoft YaHei'">有</button><span class="cm-cell off"></span><button class="cm-cell on" style="font-family: 'Microsoft YaHei'">这</button><button class="cm-cell on" style="font-family: 'Microsoft YaHei'">为</button><span class="cm-cell off"></span><button class="cm-cell on" style="font-family: 'Microsoft YaHei'">大</button><button class="cm-cell on" style="font-family: 'Microsoft YaHei'">来</button><button class="cm-cell on" style="font-family: 'Microsoft YaHei'">以</button><button class="cm-cell on" style="font-family: 'Microsoft YaHei'">个</button><button class="cm-cell on picked" style="font-family: 'Microsoft YaHei'">中</button><button class="cm-cell on" style="font-family: 'Microsoft YaHei'">上</button><span class="cm-cell off"></span><button class="cm-cell on" style="font-family: 'Microsoft YaHei'">到</button><button class="cm-cell on" style="font-family: 'Microsoft YaHei'">国</button><button class="cm-cell on" style="font-family: 'Microsoft YaHei'">和</button><button class="cm-cell on" style="font-family: 'Microsoft YaHei'">地</button></div><div class="cm-row" style="top:40px;height:38px;grid-template-columns:repeat(24,1fr)"><button class="cm-cell on" style="font-family: 'Microsoft YaHei'">也</button><button class="cm-cell on" style="font-family: 'Microsoft YaHei'">子</button><button class="cm-cell on" style="font-family: 'Microsoft YaHei'">时</button><span class="cm-cell off"></span><button class="cm-cell on" style="font-family: 'Microsoft YaHei'">出</button><button class="cm-cell on" style="font-family: 'Microsoft YaHei'">而</button><button class="cm-cell on" style="font-family: 'Microsoft YaHei'">要</button><button class="cm-cell on" style="font-family: 'Microsoft YaHei'">于</button><button class="cm-cell on" style="font-family: 'Microsoft YaHei'">就</button><button class="cm-cell on" style="font-family: 'Microsoft YaHei'">下</button><button class="cm-cell on" style="font-family: 'Microsoft YaHei'">得</button><button class="cm-cell on" style="font-family: 'Microsoft YaHei'">可</button><button class="cm-cell on" style="font-family: 'Microsoft YaHei'">你</button><button class="cm-cell on" style="font-family: 'Microsoft YaHei'">年</button><button class="cm-cell on" style="font-family: 'Microsoft YaHei'">生</button><button class="cm-cell on" style="font-family: 'Microsoft YaHei'">自</button><button class="cm-cell on" style="font-family: 'Microsoft YaHei'">会</button><span class="cm-cell off"></span><button class="cm-cell on" style="font-family: 'Microsoft YaHei'">后</button><button class="cm-cell on" style="font-family: 'Microsoft YaHei'">能</button><button class="cm-cell on" style="font-family: 'Microsoft YaHei'">对</button><button class="cm-cell on" style="font-family: 'Microsoft YaHei'">着</button><span class="cm-cell off"></span><button class="cm-cell on" style="font-family: 'Microsoft YaHei'">其</button></div><div class="cm-row" style="top:80px;height:38px;grid-template-columns:repeat(24,1fr)"><button class="cm-cell on" style="font-family: 'Microsoft YaHei'">里</button><button class="cm-cell on" style="font-family: 'Microsoft YaHei'">所</button><span class="cm-cell off"></span><button class="cm-cell on" style="font-family: 'Microsoft YaHei'">行</button><button class="cm-cell on" style="font-family: 'Microsoft YaHei'">过</button><button class="cm-cell on" style="font-family: 'Microsoft YaHei'">家</button><button class="cm-cell on" style="font-family: 'Microsoft YaHei'">十</button><button class="cm-cell on" style="font-family: 'Microsoft YaHei'">用</button><button class="cm-cell on" style="font-family: 'Microsoft YaHei'">发</button><button class="cm-cell on" style="font-family: 'Microsoft YaHei'">天</button><button class="cm-cell on" style="font-family: 'Microsoft YaHei'">如</button><button class="cm-cell on" style="font-family: 'Microsoft YaHei'">然</button><button class="cm-cell on" style="font-family: 'Microsoft YaHei'">作</button><button class="cm-cell on" style="font-family: 'Microsoft YaHei'">方</button><button class="cm-cell on" style="font-family: 'Microsoft YaHei'">成</button><button class="cm-cell on" style="font-family: 'Microsoft YaHei'">者</button><span class="cm-cell off"></span><button class="cm-cell on" style="font-family: 'Microsoft YaHei'">日</button><button class="cm-cell on" style="font-family: 'Microsoft YaHei'">都</button><button class="cm-cell on" style="font-family: 'Microsoft YaHei'">三</button><span class="cm-cell off"></span><button class="cm-cell on" style="font-family: 'Microsoft YaHei'">军</button><button class="cm-cell on" style="font-family: 'Microsoft YaHei'">二</button><button class="cm-cell on" style="font-family: 'Microsoft YaHei'">无</button></div><div class="cm-row" style="top:120px;height:38px;grid-template-columns:repeat(24,1fr)"><button class="cm-cell on" style="font-family: 'Microsoft YaHei'">同</button><button class="cm-cell on" style="font-family: 'Microsoft YaHei'">么</button><span class="cm-cell off"></span><button class="cm-cell on" style="font-family: 'Microsoft YaHei'">法</button><button class="cm-cell on" style="font-family: 'Microsoft YaHei'">当</button><button class="cm-cell on" style="font-family: 'Microsoft YaHei'">起</button><button class="cm-cell on" style="font-family: 'Microsoft YaHei'">与</button><button class="cm-cell on" style="font-family: 'Microsoft YaHei'">好</button><button class="cm-cell on" style="font-family: 'Microsoft YaHei'">看</button><button class="cm-cell on" style="font-family: 'Microsoft YaHei'">学</button><button class="cm-cell on" style="font-family: 'Microsoft YaHei'">进</button><span class="cm-cell off"></span><button class="cm-cell on" style="font-family: 'Microsoft YaHei'">将</button><button class="cm-cell on" style="font-family: 'Microsoft YaHei'">还</button><button class="cm-cell on" style="font-family: 'Microsoft YaHei'">分</button><button class="cm-cell on" style="font-family: 'Microsoft YaHei'">此</button><button class="cm-cell on" style="font-family: 'Microsoft YaHei'">心</button><button class="cm-cell on" style="font-family: 'Microsoft YaHei'">前</button><button class="cm-cell on" style="font-family: 'Microsoft YaHei'">面</button><button class="cm-cell on" style="font-family: 'Microsoft YaHei'">又</button><button class="cm-cell on" style="font-family: 'Microsoft YaHei'">定</button><button class="cm-cell on" style="font-family: 'Microsoft YaHei'">见</button><button class="cm-cell on" style="font-family: 'Microsoft YaHei'">只</button><button class="cm-cell on" style="font-family: 'Microsoft YaHei'">主</button></div><div class="cm-row" style="top:160px;height:38px;grid-template-columns:repeat(24,1fr)"><button class="cm-cell on" style="font-family: 'Microsoft YaHei'">没</button><button class="cm-cell on" style="font-family: 'Microsoft YaHei'">公</button><button class="cm-cell on" style="font-family: 'Microsoft YaHei'">从</button></div></div>
+        </div>
+        <div class="cm-detail">
+          <span class="cm-detail-char" style="font-family:'Microsoft YaHei'">中</span>
+          <div class="cm-detail-meta">
+            <span class="cm-detail-code tabular">U+4E2D</span>
+            <span class="cm-detail-block">中日韩统一表意文字</span>
+          </div>
+          <div class="cm-detail-actions">
+            <button class="exp-btn">复制字符</button>
+            <button class="exp-btn">复制码位</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+<script>
+(function () {
+  const GRID_PAD_X = 28, CELL_MIN = 38, ROW_GAP = 2;
+  const grid = document.querySelector('.cm-grid');
+  const space = document.querySelector('.cm-grid-space');
+  const chars = [...space.querySelectorAll('.cm-row')].flatMap(r => [...r.children]).map(c => c.textContent);
+  const usable = Math.max(0, grid.clientWidth - GRID_PAD_X);
+  const cols = Math.max(6, Math.floor((usable + ROW_GAP) / (CELL_MIN + ROW_GAP)) || 6);
+  const cell = usable > 0 ? (usable - ROW_GAP * (cols - 1)) / cols : CELL_MIN;
+  const rowH = cell + ROW_GAP;
+  const rows = Math.ceil(chars.length / cols);
+  space.style.height = rows * rowH + 'px';
+  space.innerHTML = '';
+  for (let r = 0; r < rows; r++) {
+    const row = document.createElement('div');
+    row.className = 'cm-row';
+    row.style.top = r * rowH + 'px';
+    row.style.height = cell + 'px';
+    row.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+    for (let c = 0; c < cols; c++) {
+      const ch = chars[r * cols + c] || '';
+      const el = document.createElement(ch ? 'button' : 'span');
+      el.className = 'cm-cell ' + (ch ? 'on' : 'off');
+      el.style.fontFamily = "'Microsoft YaHei'";
+      el.textContent = ch;
+      row.appendChild(el);
+    }
+    space.appendChild(row);
+  }
+  window.__probe = {
+    cols, cell: Math.round(cell * 10) / 10, rowH: Math.round(rowH * 10) / 10,
+    gridClient: grid.clientWidth, gridScroll: grid.scrollWidth,
+    overflowX: grid.scrollWidth > grid.clientWidth,
+    lastRight: Math.round(space.lastElementChild.lastElementChild.getBoundingClientRect().right),
+    gridRight: Math.round(grid.getBoundingClientRect().right),
+  };
+})();
+</script>
+
+</body></html>

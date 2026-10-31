@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="utf-8">
+<title>重复字体预览</title>
+<link rel="stylesheet" href="../src/design/tokens.css">
+<link rel="stylesheet" href="../src/app.css">
+<style>
+  html, body { margin: 0; height: 100%; }
+  body { background: var(--canvas); font-family: var(--font-ui); color: var(--text-primary); }
+  #root { position: relative; height: 100vh; display: flex; }
+  .side-gap { width: 236px; flex-shrink: 0; }
+  .app-content { flex: 1; min-height: 0; position: relative; }
+  .glass-e3 { background: var(--e3); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); }
+  .fd-mono { font-family: var(--font-mono); }
+</style>
+</head>
+<body>
+<div id="root">
+  <div class="side-gap"></div>
+  <main class="app-content"><div class="dupe-view">
+    <div class="dupe-bar">
+      <span class="dupe-summary">
+        3 组 · 7 个文件
+        <span class="dupe-dot"></span>
+        最多可回收 20.3 MB
+        <span class="dupe-dot"></span>
+        4 个系统字体受保护
+      </span>
+      <button class="dupe-rescan">重新检测</button>
+    </div>
+
+    <div class="dupe-list">
+      <!-- identical -->
+      <section class="dupe-group">
+        <header class="dupe-group-head">
+          <div class="dupe-group-title">
+            <span class="dupe-kind dupe-kind-same">完全相同</span>
+            <h3>楷体_GB2312 · Regular</h3>
+          </div>
+          <div class="dupe-group-side">
+            <span class="dupe-count tabular">2 个文件</span>
+            <span class="dupe-reclaim tabular">可回收 3.9 MB</span>
+          </div>
+        </header>
+        <p class="dupe-group-note">这些文件的 SHA-256 完全一致，删掉多余的那几份不会丢失任何字形。系统字体永远例外，程序不会动它们。</p>
+        <div class="dupe-rows">
+          <label class="dupe-row">
+            <span class="dupe-check"><input type="checkbox"><span class="dupe-check-mark">✓</span></span>
+            <span class="dupe-row-main">
+              <span class="dupe-row-head">
+                <span class="dupe-file tabular">楷体_GB2312.ttf</span>
+                <span class="dupe-tag dupe-tag-keep">建议保留</span>
+                <span class="dupe-tag dupe-tag-user">自装字体</span>
+                <span class="dupe-tag dupe-tag-same">字节相同</span>
+              </span>
+              <span class="dupe-path fd-mono">C:\Users\Hex\AppData\Local\Microsoft\Windows\Fonts\楷体_GB2312.ttf</span>
+            </span>
+            <span class="dupe-meta tabular"><span>3.9 MB</span><span class="dupe-meta-dim">2013-10-11</span></span>
+          </label>
+          <label class="dupe-row dupe-row-on">
+            <span class="dupe-check"><input type="checkbox" checked><span class="dupe-check-mark">✓</span></span>
+            <span class="dupe-row-main">
+              <span class="dupe-row-head">
+                <span class="dupe-file tabular">楷体_GB2312_0.ttf</span>
+                <span class="dupe-tag dupe-tag-user">自装字体</span>
+                <span class="dupe-tag dupe-tag-same">字节相同</span>
+              </span>
+              <span class="dupe-path fd-mono">C:\Users\Hex\AppData\Local\Microsoft\Windows\Fonts\楷体_GB2312_0.ttf</span>
+            </span>
+            <span class="dupe-meta tabular"><span>3.9 MB</span><span class="dupe-meta-dim">2000-01-02</span></span>
+          </label>
+        </div>
+      </section>
+
+      <!-- sameName -->
+      <section class="dupe-group">
+        <header class="dupe-group-head">
+          <div class="dupe-group-title">
+            <span class="dupe-kind dupe-kind-name">同名不同版本</span>
+            <h3>宋体 · Regular、新宋体 · Regular</h3>
+          </div>
+          <div class="dupe-group-side">
+            <span class="dupe-count tabular">2 个文件</span>
+            <span class="dupe-reclaim tabular">可回收 14.6 MB</span>
+          </div>
+        </header>
+        <p class="dupe-group-note">家族名与字重相同，但文件内容不同（不同版本或不同厂商实现）。删之前请确认你更需要哪一份。</p>
+        <div class="dupe-rows">
+          <label class="dupe-row dupe-row-locked">
+            <span class="dupe-check"><input type="checkbox" disabled><span class="dupe-check-mark">🛡</span></span>
+            <span class="dupe-row-main">
+              <span class="dupe-row-head">
+                <span class="dupe-file tabular">simsun.ttc</span>
+                <span class="dupe-tag dupe-tag-keep">建议保留</span>
+                <span class="dupe-tag">系统字体</span>
+              </span>
+              <span class="dupe-path fd-mono">C:\Windows\Fonts\simsun.ttc</span>
+            </span>
+            <span class="dupe-meta tabular"><span>16.0 MB</span><span class="dupe-meta-dim">2026-03-06</span></span>
+          </label>
+          <label class="dupe-row">
+            <span class="dupe-check"><input type="checkbox"><span class="dupe-check-mark">✓</span></span>
+            <span class="dupe-row-main">
+              <span class="dupe-row-head">
+                <span class="dupe-file tabular">宋体.ttc</span>
+                <span class="dupe-tag dupe-tag-user">自装字体</span>
+              </span>
+              <span class="dupe-path fd-mono">C:\Users\Hex\AppData\Local\Microsoft\Windows\Fonts\宋体.ttc</span>
+            </span>
+            <span class="dupe-meta tabular"><span>16.0 MB</span><span class="dupe-meta-dim">2009-06-10</span></span>
+          </label>
+        </div>
+      </section>
+
+      <section class="dupe-group">
+        <header class="dupe-group-head">
+          <div class="dupe-group-title">
+            <span class="dupe-kind dupe-kind-name">同名不同版本</span>
+            <h3>Times New Roman · Regular</h3>
+          </div>
+          <div class="dupe-group-side">
+            <span class="dupe-count tabular">3 个文件</span>
+            <span class="dupe-reclaim tabular">可回收 1.2 MB</span>
+          </div>
+        </header>
+        <p class="dupe-group-note">家族名与字重相同，但文件内容不同（不同版本或不同厂商实现）。删之前请确认你更需要哪一份。</p>
+        <div class="dupe-rows">
+          <label class="dupe-row dupe-row-locked">
+            <span class="dupe-check"><input type="checkbox" disabled><span class="dupe-check-mark">🛡</span></span>
+            <span class="dupe-row-main">
+              <span class="dupe-row-head">
+                <span class="dupe-file tabular">times.ttf</span>
+                <span class="dupe-tag dupe-tag-keep">建议保留</span>
+                <span class="dupe-tag">系统字体</span>
+              </span>
+              <span class="dupe-path fd-mono">C:\Windows\Fonts\times.ttf</span>
+            </span>
+            <span class="dupe-meta tabular"><span>1.06 MB</span><span class="dupe-meta-dim">2026-07-14</span></span>
+          </label>
+          <label class="dupe-row dupe-row-on">
+            <span class="dupe-check"><input type="checkbox" checked><span class="dupe-check-mark">✓</span></span>
+            <span class="dupe-row-main">
+              <span class="dupe-row-head">
+                <span class="dupe-file tabular">Times New Roman.ttf</span>
+                <span class="dupe-tag dupe-tag-user">自装字体</span>
+              </span>
+              <span class="dupe-path fd-mono">C:\Users\Hex\AppData\Local\Microsoft\Windows\Fonts\Times New Roman.ttf</span>
+            </span>
+            <span class="dupe-meta tabular"><span>1.05 MB</span><span class="dupe-meta-dim">2023-03-07</span></span>
+          </label>
+          <label class="dupe-row">
+            <span class="dupe-check"><input type="checkbox"><span class="dupe-check-mark">✓</span></span>
+            <span class="dupe-row-main">
+              <span class="dupe-row-head">
+                <span class="dupe-file tabular">times.ttf</span>
+                <span class="dupe-tag dupe-tag-user">自装字体</span>
+              </span>
+              <span class="dupe-path fd-mono">C:\Users\Hex\AppData\Local\Microsoft\Windows\Fonts\times.ttf</span>
+            </span>
+            <span class="dupe-meta tabular"><span>0.26 MB</span><span class="dupe-meta-dim">2010-11-20</span></span>
+          </label>
+        </div>
+      </section>
+    </div>
+
+    <p class="dupe-footnote">
+      <span>ⓘ</span>
+      删除会把文件移入应用回收站（可从「回收站」还原），同时注销系统字体登记并通知其它程序刷新。
+    </p>
+
+    <div class="dupe-actionbar glass-e3">
+      <span class="dupe-action-text">已选 2 个 <span class="dupe-dot"></span> <span class="tabular">5.0 MB</span></span>
+      <button class="dupe-action-cancel">取消选择</button>
+      <button class="dupe-action-run">移到回收站</button>
+    </div>
+  </div></main>
+</div>
+</body>
+</html>
