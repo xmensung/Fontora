@@ -1,6 +1,6 @@
 import { openUrl, revealItemInDir } from "@tauri-apps/plugin-opener";
 import { AnimatePresence, motion } from "motion/react";
-import { ArrowLeft, Check, Copy, Download, ExternalLink, FolderOpen, Grid3x3, LoaderCircle, Minus, Package, Plus, Star, Stethoscope, Tag, X } from "lucide-react";
+import { ArrowLeft, Check, Copy, Download, ExternalLink, FolderOpen, Grid3x3, LoaderCircle, Minus, Package, Plus, Sparkles, Star, Stethoscope, Tag, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { CharMapDialog } from "./CharMapDialog";
 import { ExportDialog } from "./ExportDialog";
@@ -16,6 +16,7 @@ import { useT } from "../lib/i18n";
 import { familiesFor, useFontStore } from "../state/fontStore";
 import { TagPicker } from "./TagPicker";
 import { normalizeTag, groupIdOfTag, TAG_GROUPS } from "../lib/tagTaxonomy";
+import { suggestFromDetail } from "../lib/tagSuggest";
 import { playTag } from "../lib/sound";
 import { springSnappy } from "../design/springs";
 
@@ -57,8 +58,15 @@ function CoverageItem({ row, graded }: { row: CoverageRow; graded: boolean }) {
   );
 }
 
-/** 详情页标签编辑区：已打标签按分组聚拢显示，「+」弹面板提供分组词表点选。 */
-function FamilyTagsEditor({ family }: { family: { name: string; tags: string[] } }) {
+/** 详情页标签编辑区：已打标签按分组聚拢显示，「+」弹面板提供分组词表点选。
+ *  detail 就绪后追加「建议标签」：由字体客观元数据推导，一键采纳，不与手动标签冲突。 */
+function FamilyTagsEditor({
+  family,
+  detail,
+}: {
+  family: { name: string; tags: string[] };
+  detail: FontDetail | null;
+}) {
   const t = useT();
   const setFamilyTags = useFontStore((s) => s.setFamilyTags);
   const [pickerOpen, setPickerOpen] = useState(false);
@@ -83,6 +91,12 @@ function FamilyTagsEditor({ family }: { family: { name: string; tags: string[] }
 
   const selected = new Set(family.tags.map(normalizeTag));
 
+  // 建议 = 自动推导 − 已打标签。每次 detail/tags 变化重算，采纳后自动消失。
+  const suggested = useMemo(() => {
+    if (!detail) return [];
+    return suggestFromDetail(family.name, detail).filter((s) => !selected.has(s));
+  }, [detail, family.name, family.tags]);
+
   return (
     <div className="fd-tags">
       {orderedTags.map((tag) => (
@@ -97,6 +111,17 @@ function FamilyTagsEditor({ family }: { family: { name: string; tags: string[] }
             <X size={11} strokeWidth={2} />
           </button>
         </span>
+      ))}
+      {suggested.map((tag) => (
+        <button
+          className="fd-tag fd-tag-suggest"
+          key={`suggest-${tag}`}
+          title={t("tag.suggestTip")}
+          onClick={() => toggle(tag)}
+        >
+          <Sparkles size={11} strokeWidth={1.8} />
+          {tag}
+        </button>
       ))}
       <div className="fd-tag-add-wrap">
         <button
@@ -750,7 +775,7 @@ export function FontDetailView() {
                     + {t("alias.short")}
                   </button>
                 </div>
-                <FamilyTagsEditor family={family} />
+                <FamilyTagsEditor family={family} detail={detail} />
                 <div className="fd-hero-meta">
                   {detail ? (
                     <>

@@ -58,9 +58,13 @@ export const TAG_GROUPS: TagGroup[] = [
     labelKey: "taggroup.attrs",
     tags: [
       { value: "等宽", labelKey: "tagval.monospaced" },
+      { value: "斜体", labelKey: "tagval.italic" },
       { value: "中英混排", labelKey: "tagval.mixed" },
       { value: "可变字体", labelKey: "tagval.variable" },
       { value: "繁体支持", labelKey: "tagval.traditional" },
+      { value: "生僻字支持", labelKey: "tagval.rareHan" },
+      { value: "大字库", labelKey: "tagval.bigCjk" },
+      { value: "专业排版", labelKey: "tagval.opentype" },
     ],
   },
 ];

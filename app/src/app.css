@@ -2679,6 +2679,21 @@ h2.detail-title.copy-name {
 .fd-tag-add-wrap {
   position: relative;
 }
+.fd-tag-suggest {
+  border-style: dashed;
+  border-color: rgba(var(--ink-rgb), 0.18);
+  background: transparent;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  font-family: inherit;
+  transition: color var(--t-micro) ease, border-color var(--t-micro) ease,
+    background var(--t-micro) ease;
+}
+.fd-tag-suggest:hover {
+  color: var(--accent-a);
+  border-color: var(--accent-a);
+  background: var(--accent-glow-soft);
+}
 .fd-tag-picker {
   position: absolute;
   top: calc(100% + 8px);

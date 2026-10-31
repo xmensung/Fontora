@@ -365,7 +365,7 @@ export const useFontStore = create<FontStore>((set, get) => ({
   adobeAvailable: false,
   motionPref: "system",
   soundPref: "off",
-  themePref: "dark",
+  themePref: "light",
   skinPref: "default",
   transparencyPref: "full",
   closeToTray: false,
@@ -448,7 +448,7 @@ export const useFontStore = create<FontStore>((set, get) => ({
           : "off",
         themePref: (["dark", "light", "system"] as const).includes(prefs.themePref as ThemePref)
           ? (prefs.themePref as ThemePref)
-          : "dark",
+          : "light",
         skinPref: (["default", "ink", "neon"] as const).includes(prefs.skinPref as SkinPref)
           ? (prefs.skinPref as SkinPref)
           : "default",
