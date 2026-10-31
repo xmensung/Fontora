@@ -114,6 +114,8 @@ function MainContent() {
   const search = useFontStore((s) => s.search);
   const classFilter = useFontStore((s) => s.classFilter);
   const scriptFilter = useFontStore((s) => s.scriptFilter);
+  const tagFilter = useFontStore((s) => s.tagFilter);
+  const untaggedOnly = useFontStore((s) => s.untaggedOnly);
   const variableOnly = useFontStore((s) => s.variableOnly);
   const toggleableOnly = useFontStore((s) => s.toggleableOnly);
   const formatFilter = useFontStore((s) => s.formatFilter);
@@ -132,10 +134,10 @@ function MainContent() {
     () =>
       selectVisibleFamilies({
         fonts, tags, collections, favorites, sessionActivated, notes, search,
-        classFilter, scriptFilter, formatFilter, featureFilter, installFilter, charFilter, charMatches,
+        classFilter, scriptFilter, tagFilter, untaggedOnly, formatFilter, featureFilter, installFilter, charFilter, charMatches,
         variableOnly, toggleableOnly, nav, sort, usage, ratings, aliases, pinyinKeys, ratingFilter,
       }),
-    [fonts, tags, collections, favorites, sessionActivated, notes, search, classFilter, scriptFilter, formatFilter, featureFilter, installFilter, charFilter, charMatches, variableOnly, toggleableOnly, nav, sort, usage, ratings, aliases, pinyinKeys, ratingFilter],
+    [fonts, tags, collections, favorites, sessionActivated, notes, search, classFilter, scriptFilter, tagFilter, untaggedOnly, formatFilter, featureFilter, installFilter, charFilter, charMatches, variableOnly, toggleableOnly, nav, sort, usage, ratings, aliases, pinyinKeys, ratingFilter],
   );
 
   useEffect(() => {

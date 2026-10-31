@@ -511,6 +511,45 @@
   color: var(--text-tertiary);
 }
 
+/* ---- 筛选菜单：标签分区 --------------------------------------------- */
+
+.filter-taggroup {
+  padding: 0 11px;
+}
+.filter-taggroup-label {
+  padding: 4px 0 4px;
+  font-size: var(--fs-10);
+  color: var(--text-tertiary);
+}
+.filter-tagchips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding-bottom: 4px;
+}
+.filter-tagchip {
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: var(--fs-11);
+  color: var(--text-secondary);
+  background: rgba(var(--ink-rgb), 0.05);
+  border: 1px solid rgba(var(--ink-rgb), 0.08);
+  transition: background var(--t-micro) ease, color var(--t-micro) ease;
+}
+.filter-tagchip:hover {
+  background: rgba(var(--ink-rgb), 0.09);
+  color: var(--text-primary);
+}
+.filter-tagchip-on,
+.filter-tagchip-on:hover {
+  color: #fff;
+  background: var(--accent-gradient);
+  border-color: transparent;
+}
+.filter-clear {
+  color: var(--text-tertiary);
+}
+
 
 .filter-live {
   color: var(--text-primary);

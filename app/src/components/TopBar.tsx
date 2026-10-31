@@ -16,6 +16,7 @@ import { springSnappy, springSoft } from "../design/springs";
 import { SIZES, useFontStore, type SortMode } from "../state/fontStore";
 import type { Classification, FontFormat } from "../lib/ipc";
 import { useT, type TKey } from "../lib/i18n";
+import { TAG_GROUPS } from "../lib/tagTaxonomy";
 
 const SORT_MODES = ["name", "recent", "added", "rating", "styles", "size", "glyphs"] as const satisfies readonly SortMode[];
 
@@ -131,11 +132,18 @@ function FilterMenu() {
   const setCharFilter = useFontStore((s) => s.setCharFilter);
   const ratingFilter = useFontStore((s) => s.ratingFilter);
   const setRatingFilter = useFontStore((s) => s.setRatingFilter);
+  const tagFilter = useFontStore((s) => s.tagFilter);
+  const toggleTagFilter = useFontStore((s) => s.toggleTagFilter);
+  const clearTagFilter = useFontStore((s) => s.clearTagFilter);
+  const untaggedOnly = useFontStore((s) => s.untaggedOnly);
+  const setUntaggedOnly = useFontStore((s) => s.setUntaggedOnly);
   const [open, setOpen] = useState(false);
 
   const activeCount =
     classFilter.length +
     scriptFilter.length +
+    tagFilter.length +
+    (untaggedOnly ? 1 : 0) +
     formatFilter.length +
     featureFilter.length +
     (installFilter !== "all" ? 1 : 0) +
@@ -220,6 +228,55 @@ function FilterMenu() {
                   </button>
                 </li>
               ))}
+              <li className="sort-sep" role="none" />
+              <li className="filter-heading" role="none">
+                {t("filter.tags")}
+              </li>
+              {TAG_GROUPS.map((group) => (
+                <li className="filter-taggroup" role="none" key={group.id}>
+                  <div className="filter-taggroup-label">{t(group.labelKey)}</div>
+                  <div className="filter-tagchips">
+                    {group.tags.map((entry) => {
+                      const on = tagFilter.includes(entry.value);
+                      return (
+                        <button
+                          key={entry.value}
+                          role="option"
+                          aria-selected={on}
+                          className={`filter-tagchip ${on ? "filter-tagchip-on" : ""}`}
+                          onClick={() => toggleTagFilter(entry.value)}
+                        >
+                          {t(entry.labelKey)}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </li>
+              ))}
+              <li>
+                <button
+                  role="option"
+                  aria-selected={untaggedOnly}
+                  className={untaggedOnly ? "sort-item sort-active" : "sort-item"}
+                  onClick={() => setUntaggedOnly(!untaggedOnly)}
+                >
+                  <span>{t("filter.untaggedOnly")}</span>
+                  {untaggedOnly && <Check size={13} strokeWidth={2} />}
+                </button>
+              </li>
+              {(tagFilter.length > 0 || untaggedOnly) && (
+                <li>
+                  <button
+                    role="option"
+                    aria-selected={false}
+                    className="sort-item filter-clear"
+                    onClick={clearTagFilter}
+                  >
+                    <span>{t("filter.clearTags")}</span>
+                    <X size={13} strokeWidth={2} />
+                  </button>
+                </li>
+              )}
               <li className="sort-sep" role="none" />
               <li className="filter-heading" role="none">
                 {t("filter.languageSupport")}

@@ -150,6 +150,8 @@ interface FontStore {
   classFilter: Classification[];
 
   scriptFilter: string[];
+  tagFilter: string[];
+  untaggedOnly: boolean;
   formatFilter: FontFormat[];
   featureFilter: string[];
   installFilter: InstallFilter;
@@ -278,6 +280,9 @@ interface FontStore {
   setSearch: (s: string) => void;
   toggleClassFilter: (c: Classification) => void;
   toggleScriptFilter: (s: string) => void;
+  toggleTagFilter: (tag: string) => void;
+  clearTagFilter: () => void;
+  setUntaggedOnly: (on: boolean) => void;
   setVariableOnly: (on: boolean) => void;
   setToggleableOnly: (on: boolean) => void;
   exportLibraryData: (dest: string) => Promise<void>;
@@ -375,6 +380,8 @@ export const useFontStore = create<FontStore>((set, get) => ({
   search: "",
   classFilter: [],
   scriptFilter: [],
+  tagFilter: [],
+  untaggedOnly: false,
   formatFilter: [],
   featureFilter: [],
   installFilter: "all",
@@ -1358,6 +1365,12 @@ export const useFontStore = create<FontStore>((set, get) => ({
     const cur = get().scriptFilter;
     set({ scriptFilter: cur.includes(s) ? cur.filter((x) => x !== s) : [...cur, s] });
   },
+  toggleTagFilter: (tag) => {
+    const cur = get().tagFilter;
+    set({ tagFilter: cur.includes(tag) ? cur.filter((x) => x !== tag) : [...cur, tag] });
+  },
+  clearTagFilter: () => set({ tagFilter: [], untaggedOnly: false }),
+  setUntaggedOnly: (untaggedOnly) => set({ untaggedOnly }),
   setVariableOnly: (variableOnly) => set({ variableOnly }),
   toggleFormat: (f) => {
     const cur = get().formatFilter;
@@ -1728,6 +1741,8 @@ export function selectVisibleFamilies(s: {
   search: string;
   classFilter: Classification[];
   scriptFilter: string[];
+  tagFilter: string[];
+  untaggedOnly: boolean;
   formatFilter: FontFormat[];
   featureFilter: string[];
   installFilter: InstallFilter;
@@ -1779,6 +1794,13 @@ export function selectVisibleFamilies(s: {
   }
   if (s.ratingFilter === "none") {
     out = out.filter((f) => !(s.ratings[f.name] ?? 0));
+  }
+  // 标签筛选：多选为 OR（命中任一即保留）；「未打标签」是独立开关，不与之混合。
+  if (s.tagFilter.length > 0) {
+    out = out.filter((f) => f.tags.some((t) => s.tagFilter.includes(t)));
+  }
+  if (s.untaggedOnly) {
+    out = out.filter((f) => f.tags.length === 0);
   }
   if (s.nav.kind === "tag") {
     const tag = s.nav.tag;
