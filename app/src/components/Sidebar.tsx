@@ -6,6 +6,7 @@ import { spring, springSoft, staggerDelay } from "../design/springs";
 import { allTags, familiesFor, useFontStore, type Family, type Nav } from "../state/fontStore";
 import { exportFontList } from "../lib/menus";
 import { t as translate, useT } from "../lib/i18n";
+import { TAG_GROUPS, groupIdOfTag } from "../lib/tagTaxonomy";
 
 function navKey(n: Nav): string {
   if (n.kind === "tag") return `tag:${n.tag}`;
@@ -332,25 +333,67 @@ export function Sidebar() {
               </button>
             </div>
             {!collapsed.includes("tags") &&
-              [...tagCounts.entries()].map(([tag, count]) => (
-              <NavRow
-                key={tag}
-                nav={{ kind: "tag", tag }}
-                icon={<Tag size={15} strokeWidth={1.5} />}
-                label={tag}
-                count={count}
-                index={i++}
-                onContextMenu={(e) =>
-                  openContextMenu(e, [
-                    {
-                      label: translate("menu.removeTagEverywhere", { tag }),
-                      danger: true,
-                      action: () => removeTagEverywhere(tag),
-                    },
-                  ])
+              (() => {
+                // 按分组聚拢：预置词表分组在前，未分组自定义标签归入「其他」殿后。
+                const buckets = new Map<string, [string, number][]>();
+                const others: [string, number][] = [];
+                for (const entry of tagCounts.entries()) {
+                  const gid = groupIdOfTag(entry[0]);
+                  if (gid === null) others.push(entry);
+                  else {
+                    const list = buckets.get(gid) ?? [];
+                    list.push(entry);
+                    buckets.set(gid, list);
+                  }
                 }
-              />
-            ))}
+                const sections = [
+                  ...TAG_GROUPS.filter((g) => buckets.has(g.id)).map((g) => ({
+                    id: `tags:${g.id}`,
+                    label: t(g.labelKey),
+                    items: buckets.get(g.id)!,
+                  })),
+                  ...(others.length > 0
+                    ? [{ id: "tags:other", label: t("tag.other"), items: others }]
+                    : []),
+                ];
+                return sections.map((section) => (
+                  <div
+                    key={section.id}
+                    className={`sidebar-taggroup ${collapsed.includes(section.id) ? "sidebar-collapsed" : ""}`}
+                  >
+                    <button
+                      className="sidebar-toggle sidebar-taggroup-toggle"
+                      onClick={() => toggleSection(section.id)}
+                      aria-expanded={!collapsed.includes(section.id)}
+                    >
+                      <span className="sidebar-chevron">
+                        <ChevronDown size={11} strokeWidth={2} />
+                      </span>
+                      <span>{section.label}</span>
+                    </button>
+                    {!collapsed.includes(section.id) &&
+                      section.items.map(([tag, count]) => (
+                        <NavRow
+                          key={tag}
+                          nav={{ kind: "tag", tag }}
+                          icon={<Tag size={15} strokeWidth={1.5} />}
+                          label={tag}
+                          count={count}
+                          index={i++}
+                          onContextMenu={(e) =>
+                            openContextMenu(e, [
+                              {
+                                label: translate("menu.removeTagEverywhere", { tag }),
+                                danger: true,
+                                action: () => removeTagEverywhere(tag),
+                              },
+                            ])
+                          }
+                        />
+                      ))}
+                  </div>
+                ));
+              })()}
           </div>
         )}
       </div>

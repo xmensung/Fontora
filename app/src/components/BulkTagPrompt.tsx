@@ -6,6 +6,8 @@ import { useFontStore } from "../state/fontStore";
 import { useFocusTrap } from "../lib/useFocusTrap";
 import { playTag } from "../lib/sound";
 import { useT } from "../lib/i18n";
+import { TagPicker } from "./TagPicker";
+import { normalizeTag } from "../lib/tagTaxonomy";
 
 export function BulkTagPrompt() {
   const t = useT();
@@ -13,24 +15,39 @@ export function BulkTagPrompt() {
   const setBulkTagFor = useFontStore((s) => s.setBulkTagFor);
   const applyTagToFamilies = useFontStore((s) => s.applyTagToFamilies);
   const trapRef = useFocusTrap<HTMLDivElement>(Boolean(bulkTagFor));
-  const [tag, setTag] = useState("");
-  const inputRef = useRef<HTMLInputElement>(null);
+  /** 本次要应用的标签集合（存显示值，应用时才归一化）。 */
+  const [pending, setPending] = useState<string[]>([]);
+  const panelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (bulkTagFor) {
-      setTag("");
-
-      setTimeout(() => inputRef.current?.focus(), 50);
+      setPending([]);
+      setTimeout(() => panelRef.current?.querySelector("input")?.focus(), 50);
     }
   }, [bulkTagFor]);
 
+  const toggle = (tag: string) => {
+    const clean = tag.trim();
+    if (!clean) return;
+    const norm = normalizeTag(clean);
+    setPending((cur) =>
+      cur.some((x) => normalizeTag(x) === norm)
+        ? cur.filter((x) => normalizeTag(x) !== norm)
+        : [...cur, clean],
+    );
+  };
+
   const apply = () => {
-    if (bulkTagFor && tag.trim()) {
+    if (bulkTagFor && pending.length > 0) {
       playTag(true);
-      void applyTagToFamilies(tag, bulkTagFor);
+      for (const tag of pending) {
+        void applyTagToFamilies(tag, bulkTagFor);
+      }
     }
     setBulkTagFor(null);
   };
+
+  const selectedNorms = new Set(pending.map(normalizeTag));
 
   return (
     <AnimatePresence>
@@ -67,28 +84,35 @@ export function BulkTagPrompt() {
                 <X size={15} strokeWidth={1.5} />
               </button>
             </header>
-            <div className="topbar-field">
-              <input
-                ref={inputRef}
-                value={tag}
-                onChange={(e) => setTag(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") apply();
-                  if (e.key === "Escape") setBulkTagFor(null);
-                }}
-                placeholder={t("bulk.placeholder")}
-                aria-label={t("bulk.tagNameAria")}
-                spellCheck={false}
-              />
+
+            {pending.length > 0 && (
+              <div className="bulktag-selected">
+                {pending.map((tag) => (
+                  <button
+                    key={tag}
+                    className="bulktag-selected-chip"
+                    onClick={() => toggle(tag)}
+                    aria-label={t("tag.removeAria", { tag })}
+                  >
+                    {tag}
+                    <X size={11} strokeWidth={2} />
+                  </button>
+                ))}
+              </div>
+            )}
+
+            <div ref={panelRef} className="bulktag-picker">
+              <TagPicker selected={selectedNorms} onToggle={toggle} />
             </div>
+
             <motion.button
               className="bulktag-apply"
-              disabled={!tag.trim()}
+              disabled={pending.length === 0}
               onClick={apply}
               whileHover={{ y: -1 }}
               whileTap={{ scale: 0.97 }}
             >
-              {t("bulk.apply", { count: bulkTagFor.length })}
+              {t("bulk.applyMany", { tags: pending.length, count: bulkTagFor.length })}
             </motion.button>
           </motion.div>
         </motion.div>

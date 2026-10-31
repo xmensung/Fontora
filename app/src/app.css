@@ -2508,6 +2508,163 @@ h2.detail-title.copy-name {
     var(--shadow-ground);
 }
 
+/* ---- 标签词表点选面板（TagPicker，批量弹窗与详情页共用） ------------- */
+
+.tagpicker {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.tagpicker-heading {
+  font-size: var(--fs-11);
+  font-weight: 600;
+  color: var(--text-tertiary);
+  margin-bottom: 6px;
+}
+.tagpicker-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.tagpicker-chip {
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: var(--fs-13);
+  color: var(--text-secondary);
+  background: rgba(var(--ink-rgb), 0.05);
+  border: 1px solid rgba(var(--ink-rgb), 0.08);
+  transition: background var(--t-micro) ease, color var(--t-micro) ease,
+    border-color var(--t-micro) ease, box-shadow var(--t-micro) ease;
+}
+.tagpicker-chip:hover {
+  background: rgba(var(--ink-rgb), 0.09);
+  color: var(--text-primary);
+}
+.tagpicker-chip-on,
+.tagpicker-chip-on:hover {
+  color: #fff;
+  background: var(--accent-gradient);
+  border-color: transparent;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.22),
+    0 0 12px var(--accent-glow-soft);
+}
+.tagpicker-input-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.tagpicker-input {
+  flex: 1;
+  min-width: 0;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: var(--fs-13);
+  color: var(--text-primary);
+  background: rgba(var(--ink-rgb), 0.05);
+  border: 1px solid rgba(var(--ink-rgb), 0.1);
+}
+.tagpicker-input:focus-within,
+.tagpicker-input:focus {
+  border-color: var(--accent-a);
+}
+.tagpicker-add {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  color: var(--text-secondary);
+  background: rgba(var(--ink-rgb), 0.06);
+  border: 1px solid rgba(var(--ink-rgb), 0.1);
+}
+.tagpicker-add:hover:not(:disabled) {
+  color: var(--text-primary);
+  border-color: var(--accent-a);
+}
+
+.bulktag-selected {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.bulktag-selected-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-size: var(--fs-11);
+  color: #fff;
+  background: var(--accent-gradient);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22);
+}
+.bulktag-picker {
+  max-height: min(46vh, 380px);
+  overflow-y: auto;
+}
+
+/* ---- 详情页标签区 --------------------------------------------------- */
+
+.fd-tags {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.fd-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 6px 3px 10px;
+  border-radius: 999px;
+  font-size: var(--fs-11);
+  color: var(--text-secondary);
+  background: rgba(var(--ink-rgb), 0.05);
+  border: 1px solid rgba(var(--ink-rgb), 0.08);
+}
+.fd-tag-remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  color: var(--text-tertiary);
+}
+.fd-tag-remove:hover {
+  color: var(--text-primary);
+  background: rgba(var(--ink-rgb), 0.1);
+}
+.fd-tag-add-wrap {
+  position: relative;
+}
+.fd-tag-picker {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  z-index: 60;
+  width: min(340px, 80vw);
+  max-height: min(50vh, 420px);
+  overflow-y: auto;
+  border-radius: 10px;
+  padding: 14px;
+}
+
+/* ---- 侧边栏标签分组小节 --------------------------------------------- */
+
+.sidebar-taggroup {
+  display: flex;
+  flex-direction: column;
+}
+.sidebar-taggroup-toggle {
+  font-size: var(--fs-10);
+  color: var(--text-tertiary);
+  padding: 4px 8px;
+  margin-top: 2px;
+}
+
 .selection-bar {
   position: fixed;
   bottom: 20px;

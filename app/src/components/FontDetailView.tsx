@@ -1,6 +1,6 @@
 import { openUrl, revealItemInDir } from "@tauri-apps/plugin-opener";
 import { AnimatePresence, motion } from "motion/react";
-import { ArrowLeft, Check, Copy, Download, ExternalLink, FolderOpen, Grid3x3, LoaderCircle, Minus, Package, Star, Stethoscope, X } from "lucide-react";
+import { ArrowLeft, Check, Copy, Download, ExternalLink, FolderOpen, Grid3x3, LoaderCircle, Minus, Package, Plus, Star, Stethoscope, Tag, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { CharMapDialog } from "./CharMapDialog";
 import { ExportDialog } from "./ExportDialog";
@@ -14,6 +14,10 @@ import { ipc, type CoverageRow, type FontDetail } from "../lib/ipc";
 import { useFocusTrap } from "../lib/useFocusTrap";
 import { useT } from "../lib/i18n";
 import { familiesFor, useFontStore } from "../state/fontStore";
+import { TagPicker } from "./TagPicker";
+import { normalizeTag, groupIdOfTag, TAG_GROUPS } from "../lib/tagTaxonomy";
+import { playTag } from "../lib/sound";
+import { springSnappy } from "../design/springs";
 
 const GROUPS = [
   { key: "simp", labelKey: "fontDetail.group.simp" },
@@ -49,6 +53,77 @@ function CoverageItem({ row, graded }: { row: CoverageRow; graded: boolean }) {
       <span className="fd-cov-bar" aria-hidden="true">
         <span style={{ width: `${Math.max(pct * 100, row.covered > 0 ? 2 : 0)}%` }} />
       </span>
+    </div>
+  );
+}
+
+/** 详情页标签编辑区：已打标签按分组聚拢显示，「+」弹面板提供分组词表点选。 */
+function FamilyTagsEditor({ family }: { family: { name: string; tags: string[] } }) {
+  const t = useT();
+  const setFamilyTags = useFontStore((s) => s.setFamilyTags);
+  const [pickerOpen, setPickerOpen] = useState(false);
+
+  const toggle = (tag: string) => {
+    const norm = normalizeTag(tag);
+    if (!norm) return;
+    playTag(true);
+    const cur = family.tags;
+    const next = cur.includes(norm) ? cur.filter((x) => x !== norm) : [...cur, norm];
+    void setFamilyTags(family.name, next);
+  };
+
+  // 按分组聚拢：词表分组序优先，未分组的自定义标签排最后。
+  const orderedTags = useMemo(() => {
+    const rank = (tag: string) => {
+      const gid = groupIdOfTag(tag);
+      return gid === null ? TAG_GROUPS.length : TAG_GROUPS.findIndex((g) => g.id === gid);
+    };
+    return [...family.tags].sort((a, b) => rank(a) - rank(b) || a.localeCompare(b));
+  }, [family.tags]);
+
+  const selected = new Set(family.tags.map(normalizeTag));
+
+  return (
+    <div className="fd-tags">
+      {orderedTags.map((tag) => (
+        <span className="fd-tag" key={tag}>
+          <Tag size={11} strokeWidth={1.8} />
+          {tag}
+          <button
+            className="fd-tag-remove"
+            aria-label={t("tag.removeAria", { tag })}
+            onClick={() => toggle(tag)}
+          >
+            <X size={11} strokeWidth={2} />
+          </button>
+        </span>
+      ))}
+      <div className="fd-tag-add-wrap">
+        <button
+          className="fd-alias-add"
+          aria-label={t("tag.addAria")}
+          aria-expanded={pickerOpen}
+          onClick={() => setPickerOpen((v) => !v)}
+        >
+          <Plus size={12} strokeWidth={2} /> {t("tag.addAria")}
+        </button>
+        <AnimatePresence>
+          {pickerOpen && (
+            <>
+              <div className="menu-backdrop" onClick={() => setPickerOpen(false)} />
+              <motion.div
+                className="fd-tag-picker glass-e3"
+                initial={{ opacity: 0, y: -6, scale: 0.97 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -4, scale: 0.98, transition: { duration: 0.13 } }}
+                transition={springSnappy}
+              >
+                <TagPicker selected={selected} onToggle={toggle} />
+              </motion.div>
+            </>
+          )}
+        </AnimatePresence>
+      </div>
     </div>
   );
 }
@@ -675,6 +750,7 @@ export function FontDetailView() {
                     + {t("alias.short")}
                   </button>
                 </div>
+                <FamilyTagsEditor family={family} />
                 <div className="fd-hero-meta">
                   {detail ? (
                     <>
