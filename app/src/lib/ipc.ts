@@ -587,6 +587,8 @@ export const ipc = {
   emptyTrash: () => invoke<void>("empty_trash"),
   getTags: () => invoke<Record<string, string[]>>("get_tags"),
   setTags: (family: string, tags: string[]) => invoke<void>("set_tags", { family, tags }),
+  importTags: (entries: Record<string, string[]>) =>
+    invoke<number>("import_tags", { entries }),
   getFavorites: () => invoke<string[]>("get_favorites"),
   getNotes: () => invoke<Record<string, string>>("get_notes"),
   setNote: (family: string, note: string) => invoke<void>("set_note", { family, note }),

@@ -1,5 +1,8 @@
 import { motion } from "motion/react";
-import { BarChart3, CheckCircle2, ChevronDown, CircleDashed, Clock, FolderCog, FolderOpen, FolderSearch, FolderTree, Globe, HardDriveDownload, Info, Keyboard, Library, Plus, Star, Tag, Trash2, Layers } from "lucide-react";
+import { BarChart3, CheckCircle2, ChevronDown, CircleDashed, Clock, FolderCog, FolderOpen, FolderSearch, FolderTree, Globe, HardDriveDownload, Info, Keyboard, Library, Plus, Sparkles, Star, Tag, Trash2, Layers } from "lucide-react";
+import { open as openDialog } from "@tauri-apps/plugin-dialog";
+import { readTextFile } from "@tauri-apps/plugin-fs";
+import { toast } from "../design/primitives/Toast";
 import { useEffect, useRef, useState } from "react";
 import { openContextMenu } from "../design/primitives/ContextMenu";
 import { spring, springSoft, staggerDelay } from "../design/springs";
@@ -166,6 +169,45 @@ export function Sidebar() {
       if (list.includes(tag)) {
         void setFamilyTags(family, list.filter((t) => t !== tag));
       }
+    }
+  };
+
+  // 回读 AI 名录：支持 {family: tags[]} 直映射，或 [{family, tags}] 行数组；
+  // 若读的是导出中心生成的清单 JSON（含 ExportRow 数组），按 family 聚合。
+  const importAiCatalog = async () => {
+    const path = await openDialog({
+      title: t("side.importAiCatalog"),
+      filters: [{ name: "JSON", extensions: ["json"] }],
+    });
+    if (!path) return;
+    try {
+      const text = await readTextFile(path);
+      const data: unknown = JSON.parse(text);
+      let entries: Record<string, string[]> = {};
+      if (Array.isArray(data)) {
+        for (const row of data as { family?: unknown; tags?: unknown }[]) {
+          if (typeof row?.family !== "string") continue;
+          const cur = entries[row.family] ?? [];
+          const add = Array.isArray(row.tags)
+            ? row.tags.filter((x): x is string => typeof x === "string")
+            : [];
+          entries[row.family] = [...new Set([...cur, ...add])];
+        }
+      } else if (data && typeof data === "object") {
+        for (const [k, v] of Object.entries(data as Record<string, unknown>)) {
+          if (Array.isArray(v)) {
+            entries[k] = v.filter((x): x is string => typeof x === "string");
+          }
+        }
+      }
+      const count = Object.keys(entries).length;
+      if (count === 0) {
+        toast.error(t("toast.importTagsFailed"), t("toast.importTagsEmpty"));
+        return;
+      }
+      await useFontStore.getState().importTags(entries);
+    } catch (e) {
+      toast.error(t("toast.importTagsFailed"), String(e));
     }
   };
 
@@ -394,6 +436,12 @@ export function Sidebar() {
                   </div>
                 ));
               })()}
+            {!collapsed.includes("tags") && (
+              <button className="sidebar-ai-import" onClick={() => void importAiCatalog()}>
+                <Sparkles size={12} strokeWidth={1.7} />
+                {t("side.importAiCatalog")}
+              </button>
+            )}
           </div>
         )}
       </div>

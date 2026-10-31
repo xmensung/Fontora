@@ -7065,3 +7065,23 @@ h2.detail-title.copy-name {
   margin-right: 5px;
   flex: none;
 }
+
+.sidebar-ai-import {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 4px 8px 6px;
+  padding: 5px 10px;
+  border-radius: 8px;
+  border: 1px dashed rgba(var(--ink-rgb), 0.16);
+  background: transparent;
+  color: var(--text-tertiary);
+  font-size: var(--fs-11);
+  font-family: inherit;
+  cursor: pointer;
+  transition: color var(--t-micro) ease, border-color var(--t-micro) ease;
+}
+.sidebar-ai-import:hover {
+  color: var(--accent-a);
+  border-color: var(--accent-a);
+}

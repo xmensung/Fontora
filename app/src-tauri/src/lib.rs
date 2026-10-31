@@ -31,7 +31,7 @@ mod usage;
 mod watcher;
 
 use font_types::{FontFace, FontSource, TrashEntry};
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use store::Store;
 use tauri::{Manager, State};
 
@@ -397,6 +397,38 @@ fn set_tags(store: State<Store>, family: String, tags: Vec<String>) -> Result<()
         state.tags.insert(family, tags);
     }
     store::save(&state)
+}
+
+/// AI 名录回读：输入「家族名 → 标签列表」，只影响包里提到的家族，
+/// 未提到的保持原样；空列表 = 清除该家族全部标签。标签逐项做 trim/去重。
+#[tauri::command]
+fn import_tags(
+    store: State<Store>,
+    entries: HashMap<String, Vec<String>>,
+) -> Result<usize, String> {
+    let mut state = store.0.lock().map_err(|e| e.to_string())?;
+    let mut applied = 0usize;
+    for (family, tags) in entries {
+        let family = family.trim().to_string();
+        if family.is_empty() {
+            continue;
+        }
+        let clean: Vec<String> = tags
+            .into_iter()
+            .map(|t| t.trim().to_lowercase())
+            .filter(|t| !t.is_empty())
+            .collect::<HashSet<_>>()
+            .into_iter()
+            .collect();
+        if clean.is_empty() {
+            state.tags.remove(&family);
+        } else {
+            state.tags.insert(family, clean);
+        }
+        applied += 1;
+    }
+    store::save(&state)?;
+    Ok(applied)
 }
 
 #[tauri::command]
@@ -1606,6 +1638,7 @@ pub fn run() {
             empty_trash,
             get_tags,
             set_tags,
+            import_tags,
             get_collections,
             set_collection,
             delete_collection,

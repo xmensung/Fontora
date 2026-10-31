@@ -5,6 +5,7 @@ import {
   FileJson,
   LoaderCircle,
   Package,
+  Sparkles,
   Table2,
   X,
 } from "lucide-react";
@@ -99,6 +100,30 @@ export function ExportCenter() {
         "install",
       );
       closeExport();
+    } catch (e) {
+      toast.error(t("toast.exportFailed"), String(e));
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  // AI 名录：每家族一行，附客观元数据与现有标签，交给 AI 撰写后整包回读。
+  const exportAiCatalog = async () => {
+    if (rows.length === 0) return;
+    const dest = await save({
+      defaultPath: `${stem}-AI名录.json`,
+      title: t("export2.aiCatalogTitle"),
+      filters: [{ name: "JSON", extensions: ["json"] }],
+    });
+    if (!dest) return;
+    setBusy("aicatalog");
+    try {
+      const out = await ipc.exportCatalog(dest, "json", rows, true);
+      toast.success(
+        t("export2.aiCatalogDone", { count: out.rows, size: formatBytes(out.bytes) }),
+        dest,
+        "install",
+      );
     } catch (e) {
       toast.error(t("toast.exportFailed"), String(e));
     } finally {
@@ -207,6 +232,16 @@ export function ExportCenter() {
                 >
                   <FileJson size={13} strokeWidth={1.7} />
                   {t("export2.json")}
+                </button>
+                <button
+                  className="exp-btn"
+                  disabled={busy !== null || rows.length === 0}
+                  title={t("export2.aiCatalogNote")}
+                  onClick={() => void exportAiCatalog()}
+                >
+                  {spin("aicatalog")}
+                  <Sparkles size={13} strokeWidth={1.7} />
+                  {t("export2.aiCatalog")}
                 </button>
               </div>
             </section>

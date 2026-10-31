@@ -273,6 +273,7 @@ interface FontStore {
   endTour: () => void;
   setBulkTagFor: (families: string[] | null) => void;
   applyTagToFamilies: (tag: string, families: string[]) => Promise<void>;
+  importTags: (entries: Record<string, string[]>) => Promise<void>;
   setDuplicateReport: (r: { names: string[]; at: number } | null) => void;
 
   setSampleText: (t: string) => void;
@@ -1349,6 +1350,25 @@ export const useFontStore = create<FontStore>((set, get) => ({
           ? current
           : [...current, clean];
       if (next !== current) await get().setFamilyTags(family, next);
+    }
+  },
+
+  // AI 名录回读：整体替换文件中提到的家族的标签，未提到的家族不动。
+  importTags: async (entries) => {
+    const prev = get().tags;
+    const next = { ...prev };
+    for (const [family, tags] of Object.entries(entries)) {
+      const clean = tags.map((x) => x.trim().toLowerCase()).filter(Boolean);
+      if (clean.length === 0) delete next[family];
+      else next[family] = [...new Set(clean)];
+    }
+    set({ tags: next });
+    try {
+      await ipc.importTags(entries);
+      toast.success(t("toast.tagsImported"));
+    } catch (e) {
+      set({ tags: prev });
+      toast.error(t("toast.couldntSaveTags"), String(e));
     }
   },
 
