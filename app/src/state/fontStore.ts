@@ -21,7 +21,7 @@ import {
 import { matchAffinityFonts, type AffinityEvent } from "../lib/affinity";
 import { toast } from "../design/primitives/Toast";
 import { setSoundLevel, type SoundLevel } from "../lib/sound";
-import { applyTheme, type ThemePref } from "../lib/theme";
+import { applySkin, applyTheme, type SkinPref, type ThemePref } from "../lib/theme";
 import {
   getLocalePref,
   hydrateLocalePref,
@@ -133,6 +133,7 @@ interface FontStore {
   appliedScale: number;
   soundPref: SoundLevel;
   themePref: ThemePref;
+  skinPref: SkinPref;
   localePref: LocalePref;
 
   bulkTagFor: string[] | null;
@@ -265,6 +266,7 @@ interface FontStore {
   toggleSection: (id: string) => void;
   setSoundPref: (pref: SoundLevel) => void;
   setThemePref: (pref: ThemePref) => void;
+  setSkinPref: (pref: SkinPref) => void;
   setLocalePref: (pref: LocalePref) => void;
   startTour: () => void;
   setTourStep: (step: number) => void;
@@ -319,6 +321,7 @@ function persistPrefs(get: () => FontStore) {
       collapsedSections: s.collapsedSections,
       soundPref: s.soundPref,
       themePref: s.themePref,
+      skinPref: s.skinPref,
       localePref: s.localePref,
       onboarded: s.onboarded,
       lastImported: s.lastImported,
@@ -363,6 +366,7 @@ export const useFontStore = create<FontStore>((set, get) => ({
   motionPref: "system",
   soundPref: "off",
   themePref: "dark",
+  skinPref: "default",
   transparencyPref: "full",
   closeToTray: false,
   startMinimized: false,
@@ -445,6 +449,9 @@ export const useFontStore = create<FontStore>((set, get) => ({
         themePref: (["dark", "light", "system"] as const).includes(prefs.themePref as ThemePref)
           ? (prefs.themePref as ThemePref)
           : "dark",
+        skinPref: (["default", "ink", "neon"] as const).includes(prefs.skinPref as SkinPref)
+          ? (prefs.skinPref as SkinPref)
+          : "default",
         onboarded: prefs.onboarded === true,
         localePref: isLocalePref(prefs.localePref) ? prefs.localePref : get().localePref,
         lastImported: Array.isArray(prefs.lastImported)
@@ -457,6 +464,7 @@ export const useFontStore = create<FontStore>((set, get) => ({
 
     }
     applyTheme(get().themePref);
+    applySkin(get().skinPref);
     applyMotionPref(get().motionPref);
     applyTransparencyPref(get().transparencyPref);
     try {
@@ -1305,6 +1313,12 @@ export const useFontStore = create<FontStore>((set, get) => ({
   setThemePref: (themePref) => {
     set({ themePref });
     applyTheme(themePref, true);
+    persistPrefs(get);
+  },
+
+  setSkinPref: (skinPref) => {
+    set({ skinPref });
+    applySkin(skinPref);
     persistPrefs(get);
   },
 

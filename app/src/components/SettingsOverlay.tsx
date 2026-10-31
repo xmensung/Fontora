@@ -6,6 +6,7 @@ import {
   FolderDown,
   FolderOpen,
   FolderPlus,
+  Palette,
   Scaling,
   SunMoon,
   Volume2,
@@ -42,6 +43,8 @@ export function SettingsOverlay() {
   const setSoundPref = useFontStore((s) => s.setSoundPref);
   const themePref = useFontStore((s) => s.themePref);
   const setThemePref = useFontStore((s) => s.setThemePref);
+  const skinPref = useFontStore((s) => s.skinPref);
+  const setSkinPref = useFontStore((s) => s.setSkinPref);
   const scanning = useFontStore((s) => s.phase === "scanning");
   const scanProgress = useFontStore((s) => s.scanProgress);
   const trapRef = useFocusTrap<HTMLDivElement>(openState);
@@ -469,6 +472,42 @@ export function SettingsOverlay() {
                       onClick={() => setThemePref(mode)}
                     >
                       {t(`theme.${mode}`)}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="settings-row">
+                <div>
+                  <div className="settings-label">
+                    <Palette size={13} strokeWidth={1.5} /> {t("settings.skin")}
+                  </div>
+                  <div className="settings-sub">{t("settings.skinSub")}</div>
+                </div>
+                <div
+                  className="view-toggle sound-toggle"
+                  role="radiogroup"
+                  aria-label={t("settings.skin")}
+                >
+                  {(["default", "ink", "neon"] as const).map((skin) => (
+                    <button
+                      key={skin}
+                      role="radio"
+                      aria-checked={skinPref === skin}
+                      className={`view-btn sound-btn ${skinPref === skin ? "view-btn-active" : ""}`}
+                      onClick={() => setSkinPref(skin)}
+                    >
+                      <span
+                        className="skin-swatch"
+                        style={{
+                          background:
+                            skin === "default"
+                              ? "linear-gradient(135deg, #7c3aed, #4f46e5)"
+                              : skin === "ink"
+                                ? "linear-gradient(135deg, #c0392b, #d4692e)"
+                                : "linear-gradient(135deg, #22d3ee, #3b82f6)",
+                        }}
+                      />
+                      {t(`skin.${skin}`)}
                     </button>
                   ))}
                 </div>

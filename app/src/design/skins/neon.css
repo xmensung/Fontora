@@ -1,0 +1,115 @@
+/* ============================================================
+   霓虹 Neon —— 深夜蓝黑、青蓝霓虹、冷白叠层。
+   只覆盖配色 token 与氛围装饰，不动布局与既有规则。
+   ============================================================ */
+
+/* ---- 深色：霓虹主场 ---- */
+:root[data-skin="neon"] {
+  --canvas: #07080f;
+  --ink-rgb: 230, 240, 255;
+  --scrim-rgb: 7, 8, 15;
+
+  --text-primary: #e6f0ff;
+  --text-secondary: rgba(230, 240, 255, 0.62);
+  --text-tertiary: rgba(230, 240, 255, 0.4);
+  --text-disabled: rgba(230, 240, 255, 0.25);
+
+  --e1: rgba(230, 240, 255, 0.04);
+  --e2: rgba(230, 240, 255, 0.07);
+  --e3: rgba(230, 240, 255, 0.1);
+  --e4: rgba(230, 240, 255, 0.12);
+
+  --glass-border: rgba(34, 211, 238, 0.14);
+  --glass-top-highlight: rgba(230, 240, 255, 0.1);
+  --glass-top-highlight-strong: rgba(230, 240, 255, 0.16);
+
+  --shadow-ground: 0 1px 2px rgba(0, 0, 0, 0.5);
+  --shadow-mass: 0 6px 12px rgba(0, 0, 0, 0.38);
+  --shadow-ambient: 0 24px 48px rgba(0, 0, 0, 0.32);
+
+  --accent-a: #22d3ee;
+  --accent-b: #3b82f6;
+  --accent-gradient: linear-gradient(135deg, #22d3ee, #3b82f6);
+  --accent-glow: rgba(34, 211, 238, 0.55);
+  --accent-glow-soft: rgba(34, 211, 238, 0.28);
+
+  --tooltip-bg: #101322;
+  --hero-grad: linear-gradient(180deg, #f0f7ff, rgba(240, 247, 255, 0.55));
+  --settings-glass-grad: linear-gradient(
+    165deg,
+    rgba(230, 240, 255, 0.11),
+    rgba(230, 240, 255, 0.045) 45%,
+    rgba(230, 240, 255, 0.07)
+  );
+}
+
+/* 霓虹光晕：青蓝光自上方泻下 */
+:root[data-skin="neon"] .app-frame::before {
+  background: radial-gradient(
+    70% 55% at 50% 0%,
+    rgba(34, 211, 238, 0.18),
+    transparent 70%
+  );
+}
+
+/* 霓虹允许的发光：选中态与强调按钮加青色外发光 */
+:root[data-skin="neon"] .card-selected,
+:root[data-skin="neon"] .nav-active .nav-pill,
+:root[data-skin="neon"] .pill-on,
+:root[data-skin="neon"] .view-btn-active {
+  box-shadow:
+    0 0 0 1px rgba(34, 211, 238, 0.35),
+    0 0 18px rgba(34, 211, 238, 0.22);
+}
+
+/* ---- 浅色：压低亮度与光晕，保证可读 ---- */
+:root[data-skin="neon"][data-theme="light"] {
+  --canvas: #f3f6fb;
+  --ink-rgb: 15, 23, 42;
+  --scrim-rgb: 30, 41, 59;
+
+  --text-primary: #0f172a;
+  --text-secondary: rgba(15, 23, 42, 0.66);
+  --text-tertiary: rgba(15, 23, 42, 0.46);
+  --text-disabled: rgba(15, 23, 42, 0.28);
+
+  --e1: rgba(15, 23, 42, 0.045);
+  --e2: rgba(15, 23, 42, 0.075);
+  --e3: #ffffff;
+  --e4: #ffffff;
+
+  --glass-border: rgba(15, 23, 42, 0.09);
+  --glass-top-highlight: rgba(255, 255, 255, 0.9);
+  --glass-top-highlight-strong: #ffffff;
+
+  --accent-a: #0284c7;
+  --accent-b: #2563eb;
+  --accent-gradient: linear-gradient(135deg, #0284c7, #2563eb);
+  --accent-glow: rgba(2, 132, 199, 0.3);
+  --accent-glow-soft: rgba(2, 132, 199, 0.14);
+
+  --tooltip-bg: #ffffff;
+  --hero-grad: linear-gradient(180deg, #0f172a, rgba(15, 23, 42, 0.6));
+  --settings-glass-grad: linear-gradient(
+    165deg,
+    rgba(255, 255, 255, 0.97),
+    rgba(255, 255, 255, 0.93) 45%,
+    rgba(255, 255, 255, 0.96)
+  );
+}
+
+:root[data-skin="neon"][data-theme="light"] .app-frame::before {
+  background: radial-gradient(
+    70% 55% at 50% 0%,
+    rgba(2, 132, 199, 0.1),
+    transparent 70%
+  );
+}
+
+/* 浅色下发光收敛为细描边 */
+:root[data-skin="neon"][data-theme="light"] .card-selected,
+:root[data-skin="neon"][data-theme="light"] .nav-active .nav-pill,
+:root[data-skin="neon"][data-theme="light"] .pill-on,
+:root[data-skin="neon"][data-theme="light"] .view-btn-active {
+  box-shadow: 0 0 0 1px rgba(2, 132, 199, 0.3);
+}

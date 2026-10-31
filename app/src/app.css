@@ -7041,3 +7041,12 @@ h2.detail-title.copy-name {
   font-size: var(--fs-11);
   color: var(--text-tertiary);
 }
+
+.skin-swatch {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-right: 5px;
+  flex: none;
+}

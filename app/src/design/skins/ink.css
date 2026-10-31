@@ -1,0 +1,100 @@
+/* ============================================================
+   墨韵 Ink —— 宣纸、墨色、朱砂。
+   只覆盖配色 token 与氛围装饰，不动布局与既有规则。
+   ============================================================ */
+
+/* ---- 深色：松烟墨 ---- */
+:root[data-skin="ink"] {
+  --canvas: #0e0d0b;
+  --ink-rgb: 236, 229, 216;
+  --scrim-rgb: 14, 13, 11;
+
+  --text-primary: #ece5d8;
+  --text-secondary: rgba(236, 229, 216, 0.62);
+  --text-tertiary: rgba(236, 229, 216, 0.4);
+  --text-disabled: rgba(236, 229, 216, 0.25);
+
+  --e1: rgba(236, 229, 216, 0.04);
+  --e2: rgba(236, 229, 216, 0.07);
+  --e3: rgba(236, 229, 216, 0.1);
+  --e4: rgba(236, 229, 216, 0.12);
+
+  --glass-border: rgba(236, 229, 216, 0.09);
+  --glass-top-highlight: rgba(236, 229, 216, 0.1);
+  --glass-top-highlight-strong: rgba(236, 229, 216, 0.16);
+
+  --accent-a: #c0392b;
+  --accent-b: #d4692e;
+  --accent-gradient: linear-gradient(135deg, #c0392b, #d4692e);
+  --accent-glow: rgba(192, 57, 43, 0.45);
+  --accent-glow-soft: rgba(192, 57, 43, 0.22);
+
+  --tooltip-bg: #1c1a16;
+  --hero-grad: linear-gradient(180deg, #f2ecdf, rgba(242, 236, 223, 0.55));
+  --settings-glass-grad: linear-gradient(
+    165deg,
+    rgba(236, 229, 216, 0.11),
+    rgba(236, 229, 216, 0.045) 45%,
+    rgba(236, 229, 216, 0.07)
+  );
+}
+
+/* 朱砂光晕，自右上洇开 */
+:root[data-skin="ink"] .app-frame::before {
+  background: radial-gradient(
+    60% 50% at 78% 8%,
+    rgba(192, 57, 43, 0.16),
+    transparent 70%
+  );
+}
+
+/* ---- 浅色：宣纸 ---- */
+:root[data-skin="ink"][data-theme="light"] {
+  --canvas: #f5f1e8;
+  --ink-rgb: 42, 38, 32;
+  --scrim-rgb: 52, 46, 38;
+
+  --text-primary: #2a2620;
+  --text-secondary: rgba(42, 38, 32, 0.66);
+  --text-tertiary: rgba(42, 38, 32, 0.46);
+  --text-disabled: rgba(42, 38, 32, 0.28);
+
+  --e1: rgba(42, 38, 32, 0.045);
+  --e2: rgba(42, 38, 32, 0.075);
+  --e3: #fdfaf3;
+  --e4: #fdfaf3;
+
+  --glass-border: rgba(42, 38, 32, 0.1);
+  --glass-top-highlight: rgba(255, 253, 247, 0.9);
+  --glass-top-highlight-strong: #fffdf7;
+
+  --accent-glow: rgba(192, 57, 43, 0.32);
+  --accent-glow-soft: rgba(192, 57, 43, 0.14);
+
+  --tooltip-bg: #fffdf7;
+  --hero-grad: linear-gradient(180deg, #2a2620, rgba(42, 38, 32, 0.6));
+  --settings-glass-grad: linear-gradient(
+    165deg,
+    rgba(255, 253, 247, 0.97),
+    rgba(255, 253, 247, 0.93) 45%,
+    rgba(255, 253, 247, 0.96)
+  );
+}
+
+/* 宣纸纹理：极淡的点纹，仅浅色铺一层 */
+:root[data-skin="ink"][data-theme="light"] .app-frame::after {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E");
+}
+
+/* 浅色下各面板改走暖白 */
+:root[data-skin="ink"][data-theme="light"] .titlebar,
+:root[data-skin="ink"][data-theme="light"] .sidebar,
+:root[data-skin="ink"][data-theme="light"] .topbar,
+:root[data-skin="ink"][data-theme="light"] .list-header {
+  background: rgba(245, 241, 232, 0.82);
+}
+
+:root[data-skin="ink"][data-theme="light"] .glass-e3,
+:root[data-skin="ink"][data-theme="light"] .settings-panel {
+  background: #fdfaf3;
+}

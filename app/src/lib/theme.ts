@@ -1,5 +1,14 @@
 export type ThemePref = "dark" | "light" | "system";
 
+export type SkinPref = "default" | "ink" | "neon";
+
+/** 皮肤只负责配色氛围；default 时移除属性，完全走默认 token。 */
+export function applySkin(pref: SkinPref) {
+  const root = document.documentElement;
+  if (pref === "default") delete root.dataset.skin;
+  else root.dataset.skin = pref;
+}
+
 const query = window.matchMedia("(prefers-color-scheme: light)");
 let followingSystem = false;
 
