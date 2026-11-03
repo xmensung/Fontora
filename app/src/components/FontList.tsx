@@ -18,7 +18,7 @@ export function FontList({ families }: { families: Family[] }) {
   const virtualizer = useVirtualizer({
     count: families.length,
     getScrollElement: () => parentRef.current,
-    estimateSize: () => 40,
+    estimateSize: () => 46,
     overscan: 20,
     getItemKey: (i) => families[i].name,
   });
@@ -56,7 +56,7 @@ export function FontList({ families }: { families: Family[] }) {
                   top: 0,
                   left: 0,
                   width: "100%",
-                  height: 40,
+                  height: 46,
                   transform: `translateY(${item.start}px)`,
                 }}
                 onClick={(e) => {

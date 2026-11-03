@@ -10,7 +10,7 @@ export function FontGrid({ families }: { families: Family[] }) {
   const parentRef = useRef<HTMLDivElement>(null);
   const mountedAt = useRef(Date.now());
   const sizeIndex = useFontStore((s) => s.sizeIndex);
-  const estimate = 120 + SIZES[sizeIndex] * 1.5;
+  const estimate = 128 + SIZES[sizeIndex] * 1.5;
 
   const virtualizer = useVirtualizer({
     count: families.length,

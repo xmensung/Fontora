@@ -113,18 +113,16 @@ export function SettingsOverlay() {
   // The custom folder is in effect only when enabled with a folder picked.
   const customDirActive = settings.libraryDirEnabled && settings.libraryDir != null;
 
-  const affinityDetail = !settings.affinityEnabled
-    ? t("settings.affinityDisabled")
-    : !affinityConnection
+  // 「连接」这行只在真正启用后才出现：关着的时候它只会显示一个红点加「已停用」，
+  // 看着像报错，实际什么也没发生，纯粹是噪音。
+  const affinityDetail = !affinityConnection
     ? t("settings.affinityChecking")
     : affinityConnection.reachable
       ? `${t("settings.affinityOnline")}${affinityConnection.version ? ` · ${affinityConnection.version}` : ""} · ${t("settings.affinityDocs", { count: affinityConnection.docCount })}`
       : (affinityConnection.error
           ? `${t("settings.affinityOffline")} · ${affinityConnection.error}`
-          : t("settings.affinityOffline"));
-  const affinityDot = !settings.affinityEnabled
-    ? "affinity-dot-off"
-    : !affinityConnection
+          : `${t("settings.affinityOffline")} · ${t("settings.affinityOfflineHint")}`);
+  const affinityDot = !affinityConnection
     ? ""
     : affinityConnection.reachable
       ? "affinity-dot-on"
@@ -170,8 +168,7 @@ export function SettingsOverlay() {
             role="dialog"
             aria-label={t("settings.title")}
           >
-            <div className="settings-scroll">
-            <header className="compare-head">
+            <header className="compare-head settings-head">
               <h2 className="compare-title">{t("settings.title")}</h2>
               <button
                 className="detail-close"
@@ -182,6 +179,7 @@ export function SettingsOverlay() {
               </button>
             </header>
 
+            <div className="settings-scroll">
             <section className="settings-section">
               <div className="detail-heading">{t("settings.system")}</div>
 
@@ -368,13 +366,15 @@ export function SettingsOverlay() {
             {!IS_LINUX && (
               <section className="settings-section">
                 <div className="detail-heading">{t("settings.affinity")}</div>
-                <div className="settings-row">
-                  <div>
-                    <div className="settings-label">{t("settings.affinityConnection")}</div>
-                    <div className="settings-sub">{affinityDetail}</div>
+                {settings.affinityEnabled && (
+                  <div className="settings-row">
+                    <div>
+                      <div className="settings-label">{t("settings.affinityConnection")}</div>
+                      <div className="settings-sub">{affinityDetail}</div>
+                    </div>
+                    <span className={`affinity-dot ${affinityDot}`} aria-hidden />
                   </div>
-                  <span className={`affinity-dot ${affinityDot}`} aria-hidden />
-                </div>
+                )}
                 <div className="settings-row" data-relation="enable-below">
                   <div>
                     <div className="settings-label">{t("settings.affinityEnable")}</div>
@@ -406,26 +406,6 @@ export function SettingsOverlay() {
                 <div className="settings-sub">{t("settings.affinityHelp")}</div>
               </section>
             )}
-
-            <section className="settings-section">
-              <div className="detail-heading">{t("settings.online")}</div>
-              <div className="settings-row">
-                <div>
-                  <div className="settings-label">{t("settings.onlineEnable")}</div>
-                  <div className="settings-sub">{t("settings.onlineEnableSub")}</div>
-                </div>
-                <PillToggle
-                  on={settings.onlineFontsEnabled}
-                  onChange={(on) => {
-                    void updateSettings({ ...settings, onlineFontsEnabled: on });
-                    if (!on) useFontStore.setState({ onlineFamilies: null, onlineDetail: null });
-                  }}
-                  label={t("settings.onlineEnable")}
-                />
-              </div>
-              <div className="settings-sub settings-hosts detail-mono">{t("settings.onlineHosts")}</div>
-              <div className="settings-sub">{t("settings.onlineHelp")}</div>
-            </section>
 
             <section className="settings-section">
               <div className="detail-heading">{t("settings.libraryData")}</div>

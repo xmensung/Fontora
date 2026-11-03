@@ -16,7 +16,6 @@ import { UsageView } from "./components/UsageView";
 import { OrganizeView } from "./components/OrganizeView";
 import { BackupView } from "./components/BackupView";
 import { FontFoldersView } from "./components/FontFoldersView";
-import { OnlineView } from "./components/OnlineView";
 import { FontDetailView } from "./components/FontDetailView";
 import { AboutView } from "./components/AboutView";
 import { WaterfallView } from "./components/WaterfallView";
@@ -176,7 +175,6 @@ function MainContent() {
   if (nav.kind === "organize") return <OrganizeView />;
   if (nav.kind === "backup") return <BackupView />;
   if (nav.kind === "about") return <AboutView />;
-  if (nav.kind === "online") return <OnlineView />;
   if (phase === "scanning") return <ScanSkeleton />;
   if (shown.length === 0)
     return (

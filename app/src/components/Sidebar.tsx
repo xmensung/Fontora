@@ -1,5 +1,5 @@
 import { motion } from "motion/react";
-import { BarChart3, CheckCircle2, ChevronDown, CircleDashed, Clock, FolderCog, FolderOpen, FolderSearch, FolderTree, Globe, HardDriveDownload, Info, Keyboard, Library, Plus, Sparkles, Star, Tag, Trash2, Layers } from "lucide-react";
+import { BarChart3, CheckCircle2, ChevronDown, CircleDashed, Clock, FolderCog, FolderOpen, FolderSearch, FolderTree, HardDriveDownload, Info, Keyboard, Library, Plus, Sparkles, Star, Tag, Trash2, Layers } from "lucide-react";
 import { open as openDialog } from "@tauri-apps/plugin-dialog";
 import { readTextFile } from "@tauri-apps/plugin-fs";
 import { toast } from "../design/primitives/Toast";
@@ -136,7 +136,6 @@ export function Sidebar() {
   const collections = useFontStore((s) => s.collections);
   const favorites = useFontStore((s) => s.favorites);
   const trash = useFontStore((s) => s.trash);
-  const onlineEnabled = useFontStore((s) => s.settings.onlineFontsEnabled);
   const deleteCollection = useFontStore((s) => s.deleteCollection);
   const renameCollection = useFontStore((s) => s.renameCollection);
   const setFamilyTags = useFontStore((s) => s.setFamilyTags);
@@ -447,14 +446,6 @@ export function Sidebar() {
       </div>
 
       <div className="sidebar-footer">
-        {onlineEnabled && (
-          <NavRow
-            nav={{ kind: "online" }}
-            icon={<Globe size={15} strokeWidth={1.5} />}
-            label={t("side.online")}
-            index={i++}
-          />
-        )}
         <NavRow
           nav={{ kind: "usage" }}
           icon={<BarChart3 size={15} strokeWidth={1.5} />}
