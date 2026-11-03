@@ -4,6 +4,7 @@ import { spring, staggerDelay } from "../design/springs";
 import { useFontCss } from "../lib/fontLoader";
 import { useFontStore, type Family } from "../state/fontStore";
 import { useT } from "../lib/i18n";
+import { GlyphText, useMissing } from "./GlyphText";
 
 const WATERFALL_SIZES = [8, 10, 12, 14, 16, 18, 20, 24, 28, 32, 40, 48, 56, 64, 80, 96];
 
@@ -17,6 +18,7 @@ export function WaterfallView({ families }: { families: Family[] }) {
   const lead =
     family?.faces.find((f) => f.style === "Regular") ?? family?.faces[0] ?? null;
   const { fontFamily } = useFontCss(lead);
+  const missing = useMissing(family?.name ?? "");
 
   if (!family || !lead) {
     return (
@@ -56,7 +58,9 @@ export function WaterfallView({ families }: { families: Family[] }) {
           }}
         >
           <span className="waterfall-px tabular">{px}</span>
-          <span className="waterfall-text">{text}</span>
+          <span className="waterfall-text">
+            <GlyphText text={text} missing={missing} />
+          </span>
         </motion.p>
       ))}
     </div>

@@ -252,8 +252,8 @@
 
 :root[data-theme="light"] .settings-panel::before {
   background:
-    radial-gradient(340px 220px at 12% -8%, rgba(124, 58, 237, 0.06), transparent 70%),
-    radial-gradient(300px 240px at 105% 110%, rgba(79, 70, 229, 0.045), transparent 70%);
+    radial-gradient(340px 220px at 12% -8%, rgba(var(--accent-rgb), 0.06), transparent 70%),
+    radial-gradient(300px 240px at 105% 110%, rgba(var(--accent-rgb-2), 0.045), transparent 70%);
 }
 
 :root[data-theme="light"] .settings-row {

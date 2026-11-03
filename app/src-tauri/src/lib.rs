@@ -10,6 +10,7 @@ mod dupe;
 mod export;
 mod font_detail;
 mod font_types;
+mod glyphs;
 mod health;
 mod installer;
 mod ledger;
@@ -117,6 +118,8 @@ async fn scan_fonts(app: tauri::AppHandle) -> Result<Vec<FontFace>, String> {
             faces.push(f);
         }
     }
+    // 文件增删之后，缺字缓存里记的路径可能已经不存在，整批作废重来。
+    glyphs::clear_cache();
     Ok(faces)
 }
 
@@ -692,6 +695,21 @@ fn sweep_charset(paths: &[String], ch: char) -> Vec<String> {
             .flatten()
             .collect::<Vec<String>>()
     })
+}
+
+#[tauri::command]
+async fn check_glyphs(
+    faces: Vec<(String, u32)>,
+    text: String,
+) -> Result<Vec<glyphs::GlyphReport>, String> {
+    tauri::async_runtime::spawn_blocking(move || glyphs::check_faces(&faces, &text))
+        .await
+        .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn clear_glyph_cache() {
+    glyphs::clear_cache();
 }
 
 #[tauri::command]
@@ -1682,6 +1700,8 @@ pub fn run() {
             set_note,
             play_sound,
             get_charset,
+            check_glyphs,
+            clear_glyph_cache,
             font_detail,
             fonts_with_char,
             set_ui_scale,

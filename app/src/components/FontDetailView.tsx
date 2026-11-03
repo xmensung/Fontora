@@ -10,10 +10,11 @@ import { spring } from "../design/springs";
 import { toast } from "../design/primitives/Toast";
 import { playStar } from "../lib/sound";
 import { useFontCss, formatBytes, pathBasename } from "../lib/fontLoader";
-import { ipc, type CoverageRow, type FontDetail } from "../lib/ipc";
+import { ipc, type CoverageRow, type FontDetail, type FontFace } from "../lib/ipc";
 import { useFocusTrap } from "../lib/useFocusTrap";
-import { useT } from "../lib/i18n";
+import { useT, type TKey } from "../lib/i18n";
 import { familiesFor, useFontStore } from "../state/fontStore";
+import { GlyphText, useMissing } from "./GlyphText";
 import { TagPicker } from "./TagPicker";
 import { normalizeTag, groupIdOfTag, TAG_GROUPS } from "../lib/tagTaxonomy";
 import { suggestFromDetail } from "../lib/tagSuggest";
@@ -475,7 +476,10 @@ function SamplesSection({ detail }: { detail: FontDetail }) {
   const fonts = useFontStore((s) => s.fonts);
   const tags = useFontStore((s) => s.tags);
   const familyName = useFontStore((s) => s.fontDetailFamily);
+  const vertical = useFontStore((s) => s.vertical);
+  const lineHeight = useFontStore((s) => s.lineHeight);
   const family = familyName ? familiesFor(fonts, tags).get(familyName) ?? null : null;
+  const missing = useMissing(familyName ?? "");
 
   const [styleId, setStyleId] = useState<string | null>(null);
   const [scale, setScale] = useState(1);
@@ -530,9 +534,29 @@ function SamplesSection({ detail }: { detail: FontDetail }) {
       <div className="fd-samples" style={{ fontFamily: fontFamily ?? undefined, fontStyle: faceStyle }}>
         {sampleText.trim() && (
           <div className="fd-sample">
-            <div className="fd-sample-label">{t("fontDetail.customText")}</div>
-            <div className="fd-sample-text" style={{ fontSize: 30 * scale }}>
-              {sampleText}
+            <div className="fd-sample-label">
+              {t("fontDetail.customText")}
+              {missing && missing.size > 0 && (
+                <span className="fd-sample-missing">
+                  {t("card.missing", { count: missing.size })}
+                </span>
+              )}
+            </div>
+            <div
+              className="fd-sample-text"
+              style={{
+                fontSize: 30 * scale,
+                lineHeight,
+                ...(vertical
+                  ? {
+                      writingMode: "vertical-rl" as const,
+                      textOrientation: "mixed" as const,
+                      height: Math.min(30 * scale * 8, 380),
+                    }
+                  : {}),
+              }}
+            >
+              <GlyphText text={sampleText} missing={missing} />
             </div>
           </div>
         )}
@@ -541,12 +565,126 @@ function SamplesSection({ detail }: { detail: FontDetail }) {
             <div className="fd-sample-label">
               {s.label} · <span className="tabular">{Math.round(s.size * scale)}px</span>
             </div>
-            <div className="fd-sample-text" style={{ fontSize: s.size * scale }}>
+            <div
+              className="fd-sample-text"
+              style={{
+                fontSize: s.size * scale,
+                lineHeight,
+                ...(vertical
+                  ? {
+                      writingMode: "vertical-rl" as const,
+                      textOrientation: "mixed" as const,
+                      height: Math.min(s.size * scale * 7, 380),
+                    }
+                  : {}),
+              }}
+            >
               {s.text}
             </div>
           </div>
         ))}
       </div>
+    </section>
+  );
+}
+
+/** 打开「排版特性」时先摆出来的那些。 */
+const FEATURE_PRIORITY = [
+  "liga",
+  "dlig",
+  "calt",
+  "kern",
+  "smcp",
+  "c2sc",
+  "onum",
+  "lnum",
+  "tnum",
+  "pnum",
+  "frac",
+  "ordn",
+  "sups",
+  "subs",
+  "zero",
+  "salt",
+  "swsh",
+  "titl",
+  "hist",
+];
+
+function FeaturesSection({ detail, lead }: { detail: FontDetail; lead: FontFace | null }) {  const t = useT();
+  const [on, setOn] = useState<string[]>([]);
+  const { fontFamily } = useFontCss(lead);
+  const sample = t("fontDetail.featuresSample");
+  // 一款中文字体的特性表动辄一两百个标签，全铺出来只是噪音。
+  // 常用的排版特性排前面，其余按原顺序截断。
+  const feats = useMemo(() => {
+    const all = detail.features;
+    const head = FEATURE_PRIORITY.filter((tag) => all.includes(tag));
+    const rest = all.filter((tag) => !FEATURE_PRIORITY.includes(tag));
+    return [...head, ...rest].slice(0, 48);
+  }, [detail.features]);
+
+  // 关掉特性时的 CSS 值：`"liga" 0` 才是真关，留空等于没写，浏览器会用默认值。
+  const settings = on.length
+    ? on.map((tag) => `"${tag}" 1`).join(", ")
+    : `"liga" 0, "kern" 0`;
+
+  return (
+    <section className="fd-section">
+      <header className="fd-section-head">
+        <span className="fd-section-index tabular">05</span>
+        <h2>{t("fontDetail.section.features")}</h2>
+        <span className="fd-section-rule" aria-hidden="true" />
+        {feats.length > 0 && (
+          <div className="fd-feat-tools">
+            {on.length > 0 && (
+              <span className="fd-feat-count tabular">
+                {t("fontDetail.featuresOn", { count: on.length })}
+              </span>
+            )}
+            {on.length > 0 && (
+              <button className="fd-feat-reset" onClick={() => setOn([])}>
+                {t("fontDetail.featuresReset")}
+              </button>
+            )}
+          </div>
+        )}
+      </header>
+
+      {feats.length === 0 ? (
+        <p className="fd-section-note">{t("fontDetail.featuresNone")}</p>
+      ) : (
+        <>
+          <p className="fd-section-note">{t("fontDetail.featuresNote")}</p>
+          <div className="fd-feats">
+            {feats.map((tag) => {
+              const key = `feat.${tag}`;
+              const label = t(key as TKey);
+              const isOn = on.includes(tag);
+              return (
+                <button
+                  key={tag}
+                  className={`fd-feat ${isOn ? "on" : ""}`}
+                  aria-pressed={isOn}
+                  title={tag}
+                  onClick={() =>
+                    setOn((cur) => (cur.includes(tag) ? cur.filter((x) => x !== tag) : [...cur, tag]))
+                  }
+                >
+                  <span className="fd-feat-name">{label === key ? tag : label}</span>
+                  <span className="fd-feat-tag fd-mono">{tag}</span>
+                </button>
+              );
+            })}
+          </div>
+          <div
+            className="fd-feat-sample"
+            style={{ fontFamily: fontFamily ?? undefined, fontFeatureSettings: settings }}
+          >
+            {sample}
+          </div>
+        </>
+      )}
     </section>
   );
 }
@@ -818,6 +956,7 @@ export function FontDetailView() {
                     <LicenseSection key="license" detail={detail} />,
                     <CoverageSection key="coverage" detail={detail} />,
                     <SamplesSection key="samples" detail={detail} />,
+                    <FeaturesSection key="features" detail={detail} lead={lead} />,
                   ].map((section, i) => (
                     <motion.div
                       key={i}

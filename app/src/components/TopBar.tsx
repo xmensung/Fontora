@@ -2,6 +2,7 @@ import { AnimatePresence, motion } from "motion/react";
 import {
   ArrowUpDown,
   Check,
+  ChevronDown,
   Columns2,
   Filter,
   LayoutGrid,
@@ -17,6 +18,8 @@ import { SIZES, useFontStore, type SortMode } from "../state/fontStore";
 import type { Classification, FontFormat } from "../lib/ipc";
 import { useT, type TKey } from "../lib/i18n";
 import { TAG_GROUPS } from "../lib/tagTaxonomy";
+import { SAMPLE_PRESETS } from "../lib/samplePresets";
+import { BOOK_STYLES } from "../lib/bookStyle";
 
 const SORT_MODES = ["name", "recent", "added", "rating", "styles", "size", "glyphs"] as const satisfies readonly SortMode[];
 
@@ -117,6 +120,12 @@ function FilterMenu() {
   const toggleClassFilter = useFontStore((s) => s.toggleClassFilter);
   const scriptFilter = useFontStore((s) => s.scriptFilter);
   const toggleScriptFilter = useFontStore((s) => s.toggleScriptFilter);
+  const bookFilter = useFontStore((s) => s.bookFilter);
+  const toggleBookFilter = useFontStore((s) => s.toggleBookFilter);
+  const clearBookFilter = useFontStore((s) => s.clearBookFilter);
+  const missingOnly = useFontStore((s) => s.missingOnly);
+  const setMissingOnly = useFontStore((s) => s.setMissingOnly);
+  const glyphLoading = useFontStore((s) => s.glyphLoading);
   const variableOnly = useFontStore((s) => s.variableOnly);
   const setVariableOnly = useFontStore((s) => s.setVariableOnly);
   const toggleableOnly = useFontStore((s) => s.toggleableOnly);
@@ -142,8 +151,10 @@ function FilterMenu() {
   const activeCount =
     classFilter.length +
     scriptFilter.length +
+    bookFilter.length +
     tagFilter.length +
     (untaggedOnly ? 1 : 0) +
+    (missingOnly ? 1 : 0) +
     formatFilter.length +
     featureFilter.length +
     (installFilter !== "all" ? 1 : 0) +
@@ -228,6 +239,41 @@ function FilterMenu() {
                   </button>
                 </li>
               ))}
+              <li className="sort-sep" role="none" />
+              <li className="filter-heading" role="none">
+                {t("filter.bookStyle")}
+              </li>
+              <li className="filter-taggroup" role="none">
+                <div className="filter-tagchips">
+                  {BOOK_STYLES.map((style) => {
+                    const on = bookFilter.includes(style);
+                    return (
+                      <button
+                        key={style}
+                        role="option"
+                        aria-selected={on}
+                        className={`filter-tagchip ${on ? "filter-tagchip-on" : ""}`}
+                        onClick={() => toggleBookFilter(style)}
+                      >
+                        {t(`book.${style}` as TKey)}
+                      </button>
+                    );
+                  })}
+                </div>
+              </li>
+              {bookFilter.length > 0 && (
+                <li>
+                  <button
+                    role="option"
+                    aria-selected={false}
+                    className="sort-item filter-clear"
+                    onClick={clearBookFilter}
+                  >
+                    <span>{t("filter.bookClear")}</span>
+                    <X size={13} strokeWidth={2} />
+                  </button>
+                </li>
+              )}
               <li className="sort-sep" role="none" />
               <li className="filter-heading" role="none">
                 {t("filter.tags")}
@@ -382,6 +428,22 @@ function FilterMenu() {
                   {toggleableOnly && <Check size={13} strokeWidth={2} />}
                 </button>
               </li>
+              <li>
+                <button
+                  role="option"
+                  aria-selected={missingOnly}
+                  className={missingOnly ? "sort-item sort-active" : "sort-item"}
+                  onClick={() => setMissingOnly(!missingOnly)}
+                >
+                  <span>{t("filter.missingOnly")}</span>
+                  {missingOnly && <Check size={13} strokeWidth={2} />}
+                </button>
+              </li>
+              {missingOnly && glyphLoading && (
+                <li className="filter-hint" role="none">
+                  {t("filter.missingSearching")}
+                </li>
+              )}
             </motion.ul>
           </>
         )}
@@ -453,6 +515,180 @@ function CompareButton() {
   );
 }
 
+function PresetMenu() {
+  const t = useT();
+  const sampleText = useFontStore((s) => s.sampleText);
+  const samplePreset = useFontStore((s) => s.samplePreset);
+  const sampleHistory = useFontStore((s) => s.sampleHistory);
+  const applySamplePreset = useFontStore((s) => s.applySamplePreset);
+  const setSampleText = useFontStore((s) => s.setSampleText);
+  const clearSampleHistory = useFontStore((s) => s.clearSampleHistory);
+  const [open, setOpen] = useState(false);
+
+  return (
+    <div className="sort-wrap preset-wrap">
+      <motion.button
+        className={`preset-btn ${open ? "sort-open" : ""} ${samplePreset ? "preset-on" : ""}`}
+        onClick={() => setOpen((v) => !v)}
+        aria-haspopup="menu"
+        aria-expanded={open}
+        aria-label={t("top.presetsAria")}
+        title={t("top.presets")}
+        whileTap={{ scale: 0.94 }}
+      >
+        <Type size={14} strokeWidth={1.5} />
+        <ChevronDown size={11} strokeWidth={2} />
+      </motion.button>
+      <AnimatePresence>
+        {open && (
+          <>
+            <div className="menu-backdrop" onClick={() => setOpen(false)} />
+            <motion.ul
+              className="sort-menu preset-menu glass-e3"
+              role="menu"
+              initial={{ opacity: 0, y: -6, scale: 0.97 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -4, scale: 0.98, transition: { duration: 0.13 } }}
+              transition={springSnappy}
+            >
+              <li className="filter-heading" role="none">
+                {t("top.presets")}
+              </li>
+              {SAMPLE_PRESETS.map((p) => {
+                const on = samplePreset === p.id;
+                return (
+                  <li key={p.id} role="none">
+                    <button
+                      role="menuitem"
+                      className={on ? "sort-item sort-active" : "sort-item"}
+                      onClick={() => {
+                        applySamplePreset(p.id, p.text);
+                        setOpen(false);
+                      }}
+                    >
+                      <span>{t(p.labelKey)}</span>
+                      {on && <Check size={13} strokeWidth={2} />}
+                    </button>
+                    <div className="preset-echo">{p.text}</div>
+                  </li>
+                );
+              })}
+              {sampleHistory.length > 0 && (
+                <>
+                  <li className="sort-sep" role="none" />
+                  <li className="filter-heading" role="none">
+                    {t("top.history")}
+                  </li>
+                  {sampleHistory.slice(0, 6).map((h) => (
+                    <li key={h} role="none">
+                      <button
+                        role="menuitem"
+                        className={`sort-item preset-history ${
+                          sampleText === h ? "sort-active" : ""
+                        }`}
+                        onClick={() => {
+                          setSampleText(h);
+                          setOpen(false);
+                        }}
+                      >
+                        <span className="preset-history-text">{h}</span>
+                        {sampleText === h && <Check size={13} strokeWidth={2} />}
+                      </button>
+                    </li>
+                  ))}
+                  <li role="none">
+                    <button
+                      role="menuitem"
+                      className="sort-item filter-clear"
+                      onClick={() => clearSampleHistory()}
+                    >
+                      <span>{t("top.clearHistory")}</span>
+                      <X size={13} strokeWidth={2} />
+                    </button>
+                  </li>
+                </>
+              )}
+            </motion.ul>
+          </>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+function TypeOptions() {
+  const t = useT();
+  const lineHeight = useFontStore((s) => s.lineHeight);
+  const setLineHeight = useFontStore((s) => s.setLineHeight);
+  const vertical = useFontStore((s) => s.vertical);
+  const setVertical = useFontStore((s) => s.setVertical);
+  const [open, setOpen] = useState(false);
+
+  return (
+    <div className="sort-wrap">
+      <motion.button
+        className={`type-more ${open ? "sort-open" : ""}`}
+        onClick={() => setOpen((v) => !v)}
+        aria-haspopup="menu"
+        aria-expanded={open}
+        aria-label={t("top.typeOptions")}
+        title={t("top.typeOptions")}
+        whileTap={{ scale: 0.94 }}
+      >
+        <ChevronDown size={12} strokeWidth={2} />
+      </motion.button>
+      <AnimatePresence>
+        {open && (
+          <>
+            <div className="menu-backdrop" onClick={() => setOpen(false)} />
+            <motion.div
+              className="sort-menu type-menu glass-e3"
+              role="group"
+              initial={{ opacity: 0, y: -6, scale: 0.97 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -4, scale: 0.98, transition: { duration: 0.13 } }}
+              transition={springSnappy}
+            >
+              <div className="type-row">
+                <span className="type-label">{t("top.lineHeight")}</span>
+                <input
+                  type="range"
+                  min={100}
+                  max={240}
+                  step={5}
+                  value={Math.round(lineHeight * 100)}
+                  onChange={(e) => setLineHeight(Number(e.target.value) / 100)}
+                  aria-label={t("top.lineHeight")}
+                />
+                <span className="type-value tabular">{lineHeight.toFixed(2)}</span>
+              </div>
+              <div className="type-row">
+                <span className="type-label">{t("top.layout")}</span>
+                <div className="type-seg" role="group" aria-label={t("top.layout")}>
+                  <button
+                    className={vertical ? "" : "on"}
+                    aria-pressed={!vertical}
+                    onClick={() => setVertical(false)}
+                  >
+                    {t("top.horizontal")}
+                  </button>
+                  <button
+                    className={vertical ? "on" : ""}
+                    aria-pressed={vertical}
+                    onClick={() => setVertical(true)}
+                  >
+                    {t("top.vertical")}
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
 export function TopBar() {
   const t = useT();
   const sampleText = useFontStore((s) => s.sampleText);
@@ -495,7 +731,7 @@ export function TopBar() {
       </div>
 
       <div className="topbar-field topbar-sample">
-        <Type size={14} strokeWidth={1.5} className="field-icon" />
+        <PresetMenu />
         <input
           value={sampleText}
           onChange={(e) => setSampleText(e.target.value)}
@@ -516,6 +752,7 @@ export function TopBar() {
           aria-label={t("top.sizeAria")}
         />
         <span className="size-value tabular">{SIZES[sizeIndex]}</span>
+        <TypeOptions />
       </div>
 
       <FilterMenu />

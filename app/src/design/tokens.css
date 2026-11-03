@@ -27,11 +27,21 @@
   --shadow-mass: 0 6px 12px rgba(0, 0, 0, 0.3);
   --shadow-ambient: 0 24px 48px rgba(0, 0, 0, 0.25);
 
-  --accent-a: #7c3aed;
-  --accent-b: #4f46e5;
-  --accent-gradient: linear-gradient(135deg, #7c3aed, #4f46e5);
-  --accent-glow: rgba(124, 58, 237, 0.45);
-  --accent-glow-soft: rgba(124, 58, 237, 0.22);
+  --accent-a: #e092b4;
+  --accent-b: #b96e93;
+  --accent-rgb: 224, 146, 180;
+  /* 背景光晕的第二色：主色偏冷时用一点暖色压住，整屏才不会一片粉。 */
+  --accent-rgb-2: 214, 138, 106;
+  --accent-gradient: linear-gradient(135deg, #e092b4, #b96e93);
+  --accent-glow: rgba(var(--accent-rgb), 0.45);
+  --accent-glow-soft: rgba(var(--accent-rgb), 0.22);
+  /* 落在主色块上的字。浅色主色配深字，深色主色配白字，别一概用白。 */
+  --on-accent: #2a0f1c;
+  /* 叠加对比的四种着色 */
+  --stack-ink-1: #f2eef0;
+  --stack-ink-2: #ff9d9d;
+  --stack-ink-3: #7fd4e8;
+  --stack-ink-4: #c9a6ff;
 
   --success: #4ade80;
   --warning: #fbbf24;
@@ -99,8 +109,18 @@
   --shadow-mass: 0 6px 12px rgba(30, 30, 55, 0.08);
   --shadow-ambient: 0 24px 48px rgba(30, 30, 55, 0.08);
 
-  --accent-glow: rgba(124, 58, 237, 0.38);
-  --accent-glow-soft: rgba(124, 58, 237, 0.16);
+  --accent-a: #b04a72;
+  --accent-b: #8b3a5b;
+  --accent-rgb: 176, 74, 114;
+  --accent-rgb-2: 190, 120, 96;
+  --accent-gradient: linear-gradient(135deg, #b04a72, #8b3a5b);
+  --accent-glow: rgba(var(--accent-rgb), 0.34);
+  --accent-glow-soft: rgba(var(--accent-rgb), 0.15);
+  --on-accent: #ffffff;
+  --stack-ink-1: #1a1a1a;
+  --stack-ink-2: #c0392b;
+  --stack-ink-3: #1f6f8b;
+  --stack-ink-4: #6b4e9b;
 
   --success: #15803d;
   --warning: #b45309;

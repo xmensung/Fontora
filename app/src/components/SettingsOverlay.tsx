@@ -488,7 +488,7 @@ export function SettingsOverlay() {
                   role="radiogroup"
                   aria-label={t("settings.skin")}
                 >
-                  {(["default", "ink", "neon"] as const).map((skin) => (
+                  {(["default", "celadon", "ink", "neon"] as const).map((skin) => (
                     <button
                       key={skin}
                       role="radio"
@@ -501,10 +501,12 @@ export function SettingsOverlay() {
                         style={{
                           background:
                             skin === "default"
-                              ? "linear-gradient(135deg, #7c3aed, #4f46e5)"
-                              : skin === "ink"
-                                ? "linear-gradient(135deg, #c0392b, #d4692e)"
-                                : "linear-gradient(135deg, #22d3ee, #3b82f6)",
+                              ? "linear-gradient(135deg, #e092b4, #b96e93)"
+                              : skin === "celadon"
+                                ? "linear-gradient(135deg, #64d8bd, #178f96)"
+                                : skin === "ink"
+                                  ? "linear-gradient(135deg, #c0392b, #d4692e)"
+                                  : "linear-gradient(135deg, #22d3ee, #3b82f6)",
                         }}
                       />
                       {t(`skin.${skin}`)}

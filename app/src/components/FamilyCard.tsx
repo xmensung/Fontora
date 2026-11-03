@@ -10,6 +10,8 @@ import { activeConflictsFor, conflictsFor, SIZES, useFontStore, type Family } fr
 import { playStar } from "../lib/sound";
 import type { FontFace } from "../lib/ipc";
 import { useT } from "../lib/i18n";
+import { GlyphText, useMissing } from "./GlyphText";
+import { missingLabel } from "../lib/glyphs";
 
 export function FormatBadge({ format, isVariable }: { format: string; isVariable: boolean }) {
   if (isVariable) return <span className="badge badge-variable">VAR</span>;
@@ -86,6 +88,9 @@ export const FamilyCard = memo(function FamilyCard({ family }: { family: Family 
   const hasActiveConflict = useFontStore((s) => activeConflictsFor(s.fonts).has(family.name));
   const hasDormantConflict = useFontStore((s) => conflictsFor(s.fonts).has(family.name));
   const [expanded, setExpanded] = useState(false);
+  const vertical = useFontStore((s) => s.vertical);
+  const lineHeight = useFontStore((s) => s.lineHeight);
+  const missing = useMissing(family.name);
 
   const size = SIZES[sizeIndex];
   const lead = family.faces.find((f) => f.style === "Regular") ?? family.faces[0];
@@ -212,7 +217,13 @@ export const FamilyCard = memo(function FamilyCard({ family }: { family: Family 
         </span>
       )}
 
-      <div className="card-preview" style={{ minHeight: size * 1.35 }}>
+      <div
+        className={`card-preview ${vertical ? "preview-vertical" : ""}`}
+        style={{
+          minHeight: vertical ? undefined : size * 1.35,
+          height: vertical ? Math.min(size * 3.4, 250) : undefined,
+        }}
+      >
         <AnimatePresence mode="wait">
           {fontFamily ? (
             <motion.p
@@ -221,13 +232,21 @@ export const FamilyCard = memo(function FamilyCard({ family }: { family: Family 
               style={{
                 fontFamily,
                 fontSize: size,
+                lineHeight,
                 fontStyle: lead.italic ? "italic" : "normal",
+                ...(vertical
+                  ? {
+                      writingMode: "vertical-rl" as const,
+                      textOrientation: "mixed" as const,
+                      height: "100%",
+                    }
+                  : {}),
               }}
               initial={{ opacity: 0, y: 5 }}
               animate={{ opacity: 1, y: 0 }}
               transition={spring}
             >
-              {text}
+              <GlyphText text={text} missing={missing} />
             </motion.p>
           ) : failed ? (
             <p key="failed" className="preview-text preview-failed">
@@ -243,6 +262,15 @@ export const FamilyCard = memo(function FamilyCard({ family }: { family: Family 
           )}
         </AnimatePresence>
       </div>
+
+      {missing && missing.size > 0 && (
+        <span
+          className="card-missing"
+          title={t("card.missingTitle", { chars: missingLabel(missing) })}
+        >
+          {t("card.missing", { count: missing.size })}
+        </span>
+      )}
 
       <AnimatePresence initial={false}>
         {expanded && (

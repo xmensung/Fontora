@@ -114,6 +114,7 @@ function MainContent() {
   const search = useFontStore((s) => s.search);
   const classFilter = useFontStore((s) => s.classFilter);
   const scriptFilter = useFontStore((s) => s.scriptFilter);
+  const bookFilter = useFontStore((s) => s.bookFilter);
   const tagFilter = useFontStore((s) => s.tagFilter);
   const untaggedOnly = useFontStore((s) => s.untaggedOnly);
   const variableOnly = useFontStore((s) => s.variableOnly);
@@ -134,15 +135,38 @@ function MainContent() {
     () =>
       selectVisibleFamilies({
         fonts, tags, collections, favorites, sessionActivated, notes, search,
-        classFilter, scriptFilter, tagFilter, untaggedOnly, formatFilter, featureFilter, installFilter, charFilter, charMatches,
+        classFilter, scriptFilter, bookFilter, tagFilter, untaggedOnly, formatFilter, featureFilter, installFilter, charFilter, charMatches,
         variableOnly, toggleableOnly, nav, sort, usage, ratings, aliases, pinyinKeys, ratingFilter,
       }),
-    [fonts, tags, collections, favorites, sessionActivated, notes, search, classFilter, scriptFilter, tagFilter, untaggedOnly, formatFilter, featureFilter, installFilter, charFilter, charMatches, variableOnly, toggleableOnly, nav, sort, usage, ratings, aliases, pinyinKeys, ratingFilter],
+    [fonts, tags, collections, favorites, sessionActivated, notes, search, classFilter, scriptFilter, bookFilter, tagFilter, untaggedOnly, formatFilter, featureFilter, installFilter, charFilter, charMatches, variableOnly, toggleableOnly, nav, sort, usage, ratings, aliases, pinyinKeys, ratingFilter],
   );
 
+  // 缺字筛选放在最后一道：缺字表是按「筛选后、缺字筛选前」的那批字体算的，
+  // 在这里再筛不会让结果集和计算结果互相追尾。
+  const missingOnly = useFontStore((s) => s.missingOnly);
+  const glyphMissing = useFontStore((s) => s.glyphMissing);
+  const glyphText = useFontStore((s) => s.glyphText);
+  const glyphLoading = useFontStore((s) => s.glyphLoading);
+  const sampleText = useFontStore((s) => s.sampleText);
+  const glyphReady = !glyphLoading && glyphText === sampleText.trim();
+
+  const shown = useMemo(() => {
+    if (!missingOnly || !glyphReady) return families;
+    return families.filter((f) => (glyphMissing[f.name] ?? []).length === 0);
+  }, [families, missingOnly, glyphReady, glyphMissing]);
+
   useEffect(() => {
-    useFontStore.setState({ visibleOrder: families.map((f) => f.name) });
-  }, [families]);
+    useFontStore.setState({ visibleOrder: shown.map((f) => f.name) });
+  }, [shown]);
+
+  // 缺字检测的节奏：预览文字或可见范围停手 700ms 再算。
+  // 边打字边读几百个字体文件太蠢；而 refreshGlyphs 内部有「文字 + 范围」双重校验，
+  // 没变就直接返回，所以这里可以放心地跟着 families 一起触发。
+  useEffect(() => {
+    if (phase !== "ready") return;
+    const id = setTimeout(() => void useFontStore.getState().refreshGlyphs(), 700);
+    return () => clearTimeout(id);
+  }, [families, sampleText, phase]);
 
   if (nav.kind === "trash") return <TrashView />;
   if (nav.kind === "duplicates") return <DuplicatesView />;
@@ -154,7 +178,7 @@ function MainContent() {
   if (nav.kind === "about") return <AboutView />;
   if (nav.kind === "online") return <OnlineView />;
   if (phase === "scanning") return <ScanSkeleton />;
-  if (families.length === 0)
+  if (shown.length === 0)
     return (
       <EmptyLibrary
         nav={nav}
@@ -162,20 +186,22 @@ function MainContent() {
           search.trim().length > 0 ||
           classFilter.length > 0 ||
           scriptFilter.length > 0 ||
+          bookFilter.length > 0 ||
           formatFilter.length > 0 ||
           featureFilter.length > 0 ||
           installFilter !== "all" ||
           charFilter.length > 0 ||
+          missingOnly ||
           variableOnly ||
           toggleableOnly
         }
       />
     );
-  if (viewMode === "waterfall") return <WaterfallView families={families} />;
+  if (viewMode === "waterfall") return <WaterfallView families={shown} />;
   return viewMode === "grid" ? (
-    <FontGrid families={families} />
+    <FontGrid families={shown} />
   ) : (
-    <FontList families={families} />
+    <FontList families={shown} />
   );
 }
 

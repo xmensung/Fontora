@@ -1,0 +1,598 @@
+<!doctype html>
+<html lang="zh-CN" data-fonts-origin="anyway.fm/fonts#anw-fonts-1da0c0ac">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Anyway.Fonts · 中文字体预览、缺字检测与字体对比工具</title>
+  <meta name="description" content="使用 Anyway.Fonts 在线预览电脑里安装的中文字体，检测生僻字、繁体字是否缺字，通过标题、正文等样张查看排版效果，并排、逐行或叠加比较不同字体。免费使用，无需安装">
+  <meta name="author" content="Anyway.FM">
+  <meta name="application-name" content="Anyway.Fonts">
+  <meta name="robots" content="index, follow, max-image-preview:large">
+  <meta name="theme-color" content="#f7f6f2">
+  <meta name="color-scheme" content="light">
+  <meta name="format-detection" content="telephone=no">
+  <link rel="canonical" href="https://anyway.fm/fonts/">
+  <link rel="icon" type="image/png" href="https://s.anw.red/anyway.fm/favicon/theme-default-16.png" sizes="16x16">
+  <link rel="icon" type="image/png" href="https://s.anw.red/anyway.fm/favicon/theme-default-32.png" sizes="32x32">
+  <link rel="icon" type="image/png" href="https://s.anw.red/anyway.fm/favicon/theme-default-96.png" sizes="96x96">
+  <link rel="apple-touch-icon" href="https://s.anyway.red/anyway.fm/apple-touch-icon-precomposed.png" sizes="512x512">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Anyway.FM">
+  <meta property="og:locale" content="zh_CN">
+  <meta property="og:url" content="https://anyway.fm/fonts/">
+  <meta property="og:title" content="Anyway.Fonts · 中文字体预览、缺字检测与字体对比工具">
+  <meta property="og:description" content="使用 Anyway.Fonts 在线预览电脑里安装的中文字体，检测生僻字、繁体字是否缺字，通过标题、正文等样张查看排版效果，并排、逐行或叠加比较不同字体。免费使用，无需安装">
+  <meta property="og:image" content="https://anyway.fm/fonts/og-2.jpg">
+  <meta property="og:image:type" content="image/png">
+  <meta property="og:image:width" content="1730">
+  <meta property="og:image:height" content="909">
+  <meta property="og:image:alt" content="Anyway.Fonts 的缺字检测、样张预览和中文竖排对比功能示意">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:site" content="@AnwFM">
+  <meta name="twitter:title" content="Anyway.Fonts · 中文字体预览、缺字检测与字体对比工具">
+  <meta name="twitter:description" content="使用 Anyway.Fonts 在线预览电脑里安装的中文字体，检测生僻字、繁体字是否缺字，通过标题、正文等样张查看排版效果，并排、逐行或叠加比较不同字体。免费使用，无需安装">
+  <meta name="twitter:image" content="https://anyway.fm/fonts/og-2.jpg">
+  <meta name="twitter:image:alt" content="Anyway.Fonts 的缺字检测、样张预览和中文竖排对比功能示意">
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","@id":"https://anyway.fm/fonts/#app","name":"Anyway.Fonts","url":"https://anyway.fm/fonts/","description":"使用 Anyway.Fonts 在线预览电脑里安装的中文字体，检测生僻字、繁体字是否缺字，通过标题、正文等样张查看排版效果，并排、逐行或叠加比较不同字体。免费使用，无需安装","image":"https://anyway.fm/fonts/og-2.jpg","applicationCategory":"DesignApplication","operatingSystem":"Windows, macOS, Linux","browserRequirements":"需要桌面 Chrome 或 Edge、JavaScript 和本地字体访问权限","inLanguage":"zh-CN","isAccessibleForFree":true,"featureList":["本机字体预览","中文缺字检测","中文样张预览","中文竖排预览","字体并排、逐行和叠加对比","字体收藏","中文风格筛选"],"publisher":{"@type":"Organization","name":"Anyway.FM","url":"https://anyway.fm/"}}</script>
+  <link rel="preload" href="https://s.anyway.red/anyway.fm/anwt.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="https://s.anyway.red/font/soleil-regular.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="https://s.anyway.red/font/soleil-semi-bold.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="/css/fonts.css?v=2026102601-9b9511572d62be85">
+    <script id="fonts-themes" type="application/json">{"light":{"colorScheme":"light"},"dark":{"colorScheme":"dark"},"anyway":{"colorScheme":"light","trigger":"anyway.fm"},"comic":{"colorScheme":"light","trigger":"comic sans","searchTrigger":true},"papyrus":{"colorScheme":"light","trigger":"papyrus","searchTrigger":true},"gb2312":{"colorScheme":"light","trigger":"gb2312"},"eightbit":{"colorScheme":"light","trigger":"8bit"},"bauhaus":{"colorScheme":"light","trigger":["包豪斯","bauhaus"]},"typechat":{"colorScheme":"dark","trigger":"字谈字畅"}}</script>
+  <script>
+  (() => {
+    let themes = { light: { colorScheme: 'light' }, dark: { colorScheme: 'dark' } };
+    try { themes = { ...themes, ...JSON.parse(document.getElementById('fonts-themes').textContent) }; } catch (_) {}
+    let choice = 'system';
+        try { choice = JSON.parse(localStorage.getItem('anyway-font-v1:theme')); } catch (_) {}
+        if (!Object.hasOwn(themes, choice) || !['light', 'dark'].includes(themes[choice]?.colorScheme) || themes[choice].trigger) choice = 'system';
+    // Optional themes are applied by the client only after their CSS is ready.
+    const theme = choice === 'system' ? matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light' : choice;
+    document.documentElement.dataset.theme = theme;
+    document.querySelector('meta[name="color-scheme"]').content = themes[theme].colorScheme;
+    document.querySelector('meta[name="theme-color"]').content = getComputedStyle(document.documentElement).getPropertyValue('--paper').trim();
+  })();
+  </script>
+  <script id="fonts-app-script" type="module" data-module="/js/fonts.js?v=2026102601-9b9511572d62be85" data-demo="0" data-people-local="0">
+  // Keep recovery with the HTML, independent of the cached application module.
+  const entry = document.getElementById('fonts-app-script');
+  try {
+    await import(entry.dataset.module);
+    if (entry.dataset.demo === '1') await window.fontsDemoFrame.ready;
+  } catch (error) {
+    console.error('Anyway.Fonts 启动失败', error);
+    document.getElementById('font-workspace').inert = true;
+    document.getElementById('welcome').hidden = true;
+    document.body.classList.add('welcome-open');
+    document.getElementById('fonts-startup-error').hidden = false;
+  }
+  </script>
+  <script>window.anyclicksQueue = window.anyclicksQueue || [];</script>
+  <script async src="https://anyclicks.anyway.fm/js/tracker.js" data-site-id="210b012b6b0fc4776ae522e8" data-site-domain="anyway.fm"></script></head>
+<body class="welcome-open" data-build="2026102601" data-api-url="/fonts/api.php" data-support-url="/fonts/support.php" data-advanced-css-url="/css/fonts-advanced.css?v=2026102601-9b9511572d62be85" data-charset-css-url="/css/fonts-charset.css?v=2026102601-9b9511572d62be85" data-posters-css-url="/css/fonts-posters.css?v=2026102601-9b9511572d62be85" data-themes-css-url="/css/fonts-themes.css?v=2026102601-9b9511572d62be85" data-fish-css-url="/css/fonts-fish.css?v=2026102601-9b9511572d62be85">
+<svg class="icon-defs" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></symbol>
+  <symbol id="i-star" viewBox="0 0 24 24"><path d="m12 3 2.8 5.8 6.4.9-4.6 4.5 1.1 6.3-5.7-3-5.7 3 1.1-6.3-4.6-4.5 6.4-.9Z"/></symbol>
+  <symbol id="i-grid" viewBox="0 0 24 24"><rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><rect x="14" y="14" width="6" height="6" rx="1"/></symbol>
+  <symbol id="i-list" viewBox="0 0 24 24"><path d="M9 6h12M9 12h12M9 18h12M3 6h1M3 12h1M3 18h1"/></symbol>
+  <symbol id="i-vertical" viewBox="0 0 24 24"><path d="M18 3v1M18 8v13M12 3v1M12 8v13M6 3v1M6 8v13"/></symbol>
+  <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14m-6-6 6 6-6 6"/></symbol>
+  <symbol id="i-close" viewBox="0 0 24 24"><path d="m6 6 12 12M6 18 18 6"/></symbol>
+  <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></symbol>
+  <symbol id="i-eye-off" viewBox="0 0 24 24"><path d="m3 3 18 18M10.6 5.1 12 5c6.5 0 10 7 10 7a19 19 0 0 1-3.1 4M6.1 6.1A22 22 0 0 0 2 12s3.5 7 10 7a12 12 0 0 0 5.1-1.2M9.9 9.9a3 3 0 0 0 4.2 4.2"/></symbol>
+  <symbol id="i-copy" viewBox="0 0 24 24"><rect x="8" y="8" width="13" height="13" rx="2"/><path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3"/></symbol>
+  <symbol id="i-compare" viewBox="0 0 24 24"><rect x="3" y="5" width="12" height="14" rx="1.5"/><rect x="9" y="5" width="12" height="14" rx="1.5"/></symbol>
+  <symbol id="i-book" viewBox="0 0 24 24"><path transform="translate(.6 .6) scale(.95)" d="M12 7C9.5 3.5 6 3 3 4.5v14c3-1.5 6.5-.5 9 2.5 2.5-3 6-4 9-2.5v-14C18 3 14.5 3.5 12 7Zm0 0v14"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7M14 10v7"/></symbol>
+  <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 11h18M8 15h2m4 0h2M8 18h2"/></symbol>
+  <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M4 10a8 8 0 0 1 13.7-3.7L20 9M20 4v5h-5M20 14a8 8 0 0 1-13.7 3.7L4 15M4 20v-5h5"/></symbol>
+  <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7h.01"/></symbol>
+  <symbol id="i-type" viewBox="0 0 24 24"><path d="M5 7V4h14v3M12 4v16M8 20h8"/></symbol>
+  <symbol id="i-glyph-features" viewBox="0 0 24 24"><path d="m3 20 6-15 6 15M5 15h8M18 3l1.2 3.8L23 8l-3.8 1.2L18 13l-1.2-3.8L13 8l3.8-1.2Z"/></symbol>
+  <symbol id="i-language" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c5 5 5 13 0 18-5-5-5-13 0-18Z"/></symbol>
+  <symbol id="i-line-height" viewBox="0 0 24 24"><path d="M11 5h10M11 12h10M11 19h10M5 4v16M2 7l3-3 3 3M2 17l3 3 3-3"/></symbol>
+  <symbol id="i-poster" viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="1.5"/><path d="M8 7h8M8 11h5M8 17h8"/></symbol>
+  <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="7" r="4.5"/><path d="M4.5 21v-1a7.5 5 0 0 1 15 0v1"/></symbol>
+  <symbol id="i-external" viewBox="0 0 24 24"><path d="M14 4h6v6M20 4 10 14M10 4H5a1 1 0 0 0-1 1v14a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-5"/></symbol>
+  <symbol id="i-anyway" viewBox="0 0 30 30"><g stroke-width="2"><path d="M15 11v5l11-7.2-11-7.3v4.8a11 11 0 0 0 0 22c6 0 11-4.9 11-11 0-1.6-.1-1.8-.7-3.2"/><path d="M10.7 15c-1 2.7 0 5.1 2.3 6.2 2.3 1.2 5.4.1 6.4-2.2"/></g></symbol>
+  <symbol id="i-computer" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M12 17v4M8 21h8"/></symbol>
+  <symbol id="i-coffee" viewBox="0 0 24 24"><path transform="translate(1.5 0)" d="M4 8h12v7a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5ZM16 9h2a3 3 0 0 1 0 6h-2M3 22h16M7 2v3M12 2v3"/></symbol>
+  <symbol id="i-gear" viewBox="0 0 24 24"><path d="m9.5 3-.6 2.2-1.6.9-2.2-.6-2.5 4.3 1.6 1.6v1.8l-1.6 1.6 2.5 4.3 2.2-.6 1.6.9.6 2.2h5l.6-2.2 1.6-.9 2.2.6 2.5-4.3-1.6-1.6v-1.8l1.6-1.6-2.5-4.3-2.2.6-1.6-.9L14.5 3Z"/><circle cx="12" cy="12" r="3"/></symbol>
+  <symbol id="i-settings" viewBox="0 0 24 24"><path d="M3 6h4m4 0h10M3 12h10m4 0h4M3 18h4m4 0h10"/><circle cx="9" cy="6" r="2"/><circle cx="15" cy="12" r="2"/><circle cx="9" cy="18" r="2"/></symbol>
+  <symbol id="i-wrench" viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94Z"/></symbol>
+  <symbol id="i-styles" viewBox="0 0 24 24"><rect x="8" y="8" width="13" height="13" rx="2"/><path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3M12 13h5M12 17h5"/></symbol>
+  <symbol id="i-monospace" viewBox="0 0 24 24"><path d="M4 5v14M20 5v14M8 8h8M12 8v8M8 16h8"/></symbol>
+  <symbol id="i-character-set" viewBox="0 0 24 24"><g transform="translate(1.88 1.88) scale(.88)"><path d="M7 2h4v5h5v4h-5v5H7v-5H2V7h5Z"/><path d="M18 12h3v4h-5v5h-4v-2.5"/></g></symbol>
+  <symbol id="i-open-source" viewBox="0 0 24 24"><path d="M8.6 20.3a9 9 0 1 1 6.8 0L13 14.8a3 3 0 1 0-2 0Z"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24"><path d="M20.5 14.1A8.8 8.8 0 0 1 9.9 3.5a8.8 8.8 0 1 0 10.6 10.6Z"/></symbol>
+</defs></svg>
+<div id="typechat-stage">
+  <svg id="typechat-faces" viewBox="0 0 1000 1000" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+    <path class="typechat-solid" d="M60 260 300 760 300 1760 60 1260ZM300 760 940 600 940 1600 300 1760Z"/>
+    <path class="typechat-edges" d="M60 260V1260M300 760V1760M940 600V1600" vector-effect="non-scaling-stroke"/>
+  </svg>
+  <div id="typechat-plane">
+  <div id="typechat-viewport">
+<div id="font-workspace" class="workspace" inert>
+  <aside id="font-sidebar" class="sidebar" aria-label="字体导航">
+    <div class="sidebar-brand">
+      <a class="wordmark" href="/fonts/" aria-label="Anyway.Fonts 首页">
+        Anyway<span class="brand-dot">.</span>Fonts
+      </a>
+      <button id="sidebar-toggle" class="sidebar-toggle" type="button" aria-controls="font-sidebar" aria-expanded="true" aria-label="收起侧栏" title="收起侧栏"><span class="sidebar-monogram" aria-hidden="true">A<span class="brand-dot">.</span>F</span><svg class="sidebar-toggle-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16"/><path class="sidebar-toggle-chevron" d="m15 9-3 3 3 3"/></svg></button>
+    </div>
+    <nav class="library-nav" aria-label="字体集合">
+      <div id="library-all" class="library-all active">
+        <button class="nav-item active" data-scope="all" aria-pressed="true" aria-label="全部字体" title="全部字体"><svg aria-hidden="true"><use href="#i-book"/></svg><span>全部字体</span></button>
+        <div id="font-library-status" class="font-library-status">
+          <span id="all-count" class="nav-count">—</span>
+        </div>
+      </div>
+      <span id="result-count" class="sr-only">等你打开字库</span>
+      <span id="scan-status-text" class="sr-only" role="status"></span>
+      <div class="favorites-nav-row">
+        <button class="nav-item" data-scope="favorites" aria-pressed="false" aria-label="我的收藏" title="我的收藏"><svg aria-hidden="true"><use href="#i-star"/></svg><span>我的收藏</span><span id="favorite-count" class="nav-count">0</span></button>
+        <button id="favorite-groups-toggle" class="favorite-groups-toggle" type="button" aria-label="展开收藏分组" aria-expanded="false" aria-controls="favorite-groups"><svg aria-hidden="true"><use href="#i-arrow"/></svg></button>
+      </div>
+      <div id="favorite-groups" class="favorite-groups" hidden>
+        <div id="favorite-group-list" class="favorite-group-list"></div>
+        <div class="favorite-group-actions">
+          <button type="button" class="favorite-group-action" data-group-create>＋ 新建分组</button>
+          <button type="button" class="favorite-group-action favorite-group-manage" data-group-manage aria-label="管理分组" title="管理分组"><svg aria-hidden="true"><use href="#i-gear"/></svg><span>管理分组</span></button>
+        </div>
+      </div>
+      <button class="nav-item" data-scope="recent" aria-pressed="false" aria-label="最近看过" title="最近看过"><svg aria-hidden="true"><use href="#i-clock"/></svg><span>最近看过</span></button>
+    </nav>
+    <div class="sidebar-rail-filters" role="group" aria-label="字体筛选">
+      <button id="sidebar-language-button" class="sidebar-rail-button" type="button" data-sidebar-panel="language" aria-controls="search-filters" aria-expanded="false" aria-label="文字范围" title="文字范围"><svg aria-hidden="true"><use href="#i-language"/></svg></button>
+      <button id="sidebar-category-button" class="sidebar-rail-button" type="button" data-sidebar-panel="category" aria-controls="category-section" aria-expanded="false" aria-label="中文风格" title="中文风格"><span id="sidebar-category-glyph" class="sidebar-category-glyph" aria-hidden="true">字</span></button>
+      <button id="sidebar-feature-button" class="sidebar-rail-button" type="button" data-sidebar-panel="feature" aria-controls="feature-section" aria-expanded="false" aria-label="字体特征" title="字体特征"><svg aria-hidden="true"><use href="#i-settings"/></svg><span id="sidebar-feature-count" class="sidebar-feature-count" aria-hidden="true" hidden></span></button>
+    </div>
+    <div id="search-filters" class="sidebar-filters">
+      <div class="sidebar-section-label sidebar-filter-heading">文字范围</div>
+      <input id="language-filter" type="hidden" value="">
+      <div class="language-options" role="group" aria-label="筛选文字">
+        <button type="button" data-language="" aria-pressed="true">全部</button>
+        <button type="button" data-language="中文" aria-pressed="false">中文</button>
+        <button type="button" data-language="西文" aria-pressed="false">西文</button>
+        <div id="language-filter-control" class="filter-control">
+          <button id="language-more-button" class="dropdown-trigger" type="button" title="其他文字" aria-label="其他文字" aria-haspopup="menu" aria-controls="language-filter-menu" aria-expanded="false" aria-pressed="false"><span id="language-more-label" hidden></span><svg aria-hidden="true"><use href="#i-arrow"/></svg></button>
+          <div id="language-filter-menu" class="dropdown-menu filter-menu" role="menu" aria-label="其他文字" hidden>
+            <button type="button" role="menuitemradio" aria-checked="false" data-language="简体中文">简体中文</button>
+            <button type="button" role="menuitemradio" aria-checked="false" data-language="繁体中文">繁体中文</button>
+            <button type="button" role="menuitemradio" aria-checked="false" data-language="日文">日文</button>
+            <button type="button" role="menuitemradio" aria-checked="false" data-language="韩文">韩文</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <section id="category-section" class="category-section" aria-label="中文风格">
+      <div class="sidebar-section-label">中文风格 <button id="clear-style" class="sidebar-clear" type="button" title="清除风格筛选" aria-label="清除风格筛选" hidden><svg aria-hidden="true"><use href="#i-close"/></svg></button></div>
+      <div class="category-nav-wrap">
+        <nav id="categories" class="category-nav" aria-label="中文字体分类"></nav>
+      </div>
+    </section>
+    <section id="feature-section" class="sidebar-feature-filters" aria-label="字体特征">
+      <div class="sidebar-section-label sidebar-filter-heading">字体特征 <button id="clear-features" class="sidebar-clear" type="button" title="清除特征筛选" aria-label="清除特征筛选" hidden><svg aria-hidden="true"><use href="#i-close"/></svg></button></div>
+      <input id="feature-filter" type="hidden" value="">
+      <div id="feature-options" class="feature-options" role="group" aria-label="字体特征">
+        <button type="button" data-filter-value="variable" aria-pressed="false"><svg aria-hidden="true"><use href="#i-settings"/></svg><span>可变</span></button>
+        <button type="button" data-filter-value="multi" aria-pressed="false"><svg aria-hidden="true"><use href="#i-styles"/></svg><span>多样式</span></button>
+        <button type="button" data-filter-value="mono" aria-pressed="false"><svg aria-hidden="true"><use href="#i-monospace"/></svg><span>等宽</span></button>
+        <button type="button" data-filter-value="license" aria-pressed="false" title="含开源协议说明"><svg aria-hidden="true"><use href="#i-open-source"/></svg><span>开源</span></button>
+        <button type="button" data-filter-value="large" aria-pressed="false" title="字符数量不少于 20,000"><svg aria-hidden="true"><use href="#i-character-set"/></svg><span>大字符集</span></button>
+      </div>
+    </section>
+    <div class="sidebar-bottom">
+      <nav class="sidebar-links" aria-label="帮助与网站">
+        <button id="support-button" class="sidebar-action" type="button" data-support="" aria-haspopup="dialog" aria-controls="support-dialog" aria-label="请我们喝杯咖啡" title="请我们喝杯咖啡"><svg aria-hidden="true"><use href="#i-coffee"/></svg><span>请我们喝杯咖啡</span></button>
+        <a href="/" class="sidebar-action site-link" target="_blank" rel="noopener" aria-label="Anyway.FM 官网（新标签页打开）" title="Anyway.FM 官网（新标签页打开）"><svg aria-hidden="true"><use href="#i-anyway"/></svg><span>Anyway.FM 官网</span><svg class="site-link-external" aria-hidden="true"><use href="#i-external"/></svg></a>
+        <div class="sidebar-settings"><button id="settings-button" class="sidebar-action settings-trigger" type="button" data-settings="" aria-expanded="false" aria-controls="settings-panel" aria-label="设置与帮助" title="设置与帮助"><svg aria-hidden="true"><use href="#i-wrench"/></svg><span>设置与帮助</span></button></div>
+      </nav>
+    </div>
+  </aside>
+  <main class="main-panel">
+    <div id="browser-notice" class="notice" role="status" hidden></div>
+    <div id="controls-sentinel" class="controls-sentinel" aria-hidden="true"></div>
+    <div id="browser-controls" class="browser-controls">
+      <div class="search-toolbar">
+        <label class="search-field"><svg><use href="#i-search"/></svg><input id="search" type="search" autocomplete="off" placeholder="搜索字体、出品方、设计师" aria-label="搜索字体、出品方或设计师" aria-keyshortcuts="/"><kbd title="按 / 搜索字体" aria-hidden="true">/</kbd></label>
+        <div class="results-toolbar">
+          <div class="view-switch" role="group" aria-label="显示方式"><button data-view="list" class="active" aria-pressed="true" aria-label="列表视图" title="列表视图"><svg><use href="#i-list"/></svg></button><button data-view="grid" aria-pressed="false" aria-label="网格视图" title="网格视图"><svg><use href="#i-grid"/></svg></button><button data-view="vertical" aria-pressed="false" aria-label="竖排视图" title="竖排视图"><svg aria-hidden="true"><use href="#i-vertical"/></svg></button></div>
+          <div id="sort-control" class="sort-control">
+          <button id="sort" class="dropdown-trigger" type="button" value="name" aria-label="字体排序" aria-haspopup="menu" aria-controls="sort-menu" aria-expanded="false"><span id="sort-label">名称 A–Z</span><svg aria-hidden="true"><use href="#i-arrow"/></svg></button>
+          <div id="sort-menu" class="dropdown-menu sort-menu" role="menu" aria-label="字体排序" hidden>
+            <div role="group" aria-label="排序方式">
+              <button type="button" role="menuitemradio" aria-checked="true" data-sort="name">名称 A–Z</button>
+              <button type="button" role="menuitemradio" aria-checked="false" data-sort="name-desc">名称 Z–A</button>
+              <button type="button" role="menuitemradio" aria-checked="false" data-sort="styles">样式数量</button>
+              <button type="button" role="menuitemradio" aria-checked="false" data-sort="random">随机</button>
+              <button type="button" role="menuitemradio" aria-checked="false" data-sort="foundry">按出品方</button>
+            </div>
+            <div class="dropdown-menu-section" role="group" aria-label="收藏顺序">
+              <button id="favorites-first" type="button" role="menuitemcheckbox" aria-checked="true">收藏置顶</button>
+            </div>
+          </div>
+          </div>
+        </div>
+      </div>
+      <section id="preview-controls" class="preview-controls" aria-label="示例文字设置">
+        <div class="preview-input-wrap">
+          <textarea id="preview-text" rows="1" maxlength="500" spellcheck="false" placeholder="示例文字，留空时显示字体名称" aria-label="自定义示例文字，留空时显示字体名称" aria-keyshortcuts="T">永和九年，岁在癸丑，暮春之初，会于会稽山阴之兰亭。群贤毕至，少长咸集。</textarea>
+          <kbd title="按 T 编辑示例文字" aria-hidden="true">T</kbd>
+        </div>
+        <div id="preview-settings" class="preview-settings">
+          <div class="preview-settings-start">
+            <div id="presets" class="preset-buttons" role="group" aria-label="预置示例文字">
+              <button type="button" data-preset="chinese" class="active" aria-pressed="true">中文</button><button type="button" data-preset="letters" aria-pressed="false">字母</button><button type="button" data-preset="numbers" aria-pressed="false">数字</button>
+              <div id="preset-more" class="preset-more">
+                <button id="preset-more-button" class="dropdown-trigger" type="button" aria-haspopup="menu" aria-controls="preset-menu" aria-expanded="false">其他<svg aria-hidden="true"><use href="#i-arrow"/></svg></button>
+                <div id="preset-menu" class="dropdown-menu preset-menu" role="menu" aria-label="其他示例文字" hidden>
+                  <div class="preset-menu-column" role="presentation">
+                    <div role="group" aria-label="中文">
+                      <div class="preset-menu-heading" aria-hidden="true">中文</div>
+                      <button type="button" role="menuitemradio" aria-checked="false" data-preset="modern">现代文</button>
+                      <button type="button" role="menuitemradio" aria-checked="false" data-preset="traditional">繁体中文</button>
+                      <button type="button" role="menuitemradio" aria-checked="false" data-preset="radicals">偏旁部首</button>
+                      <button type="button" role="menuitemradio" aria-checked="false" data-preset="strokes">基础笔画</button>
+                      <button type="button" role="menuitemradio" aria-checked="false" data-preset="punctuation">常用标点</button>
+                    </div>
+                  </div>
+                  <div class="preset-menu-column" role="presentation">
+                    <div role="group" aria-label="英文">
+                      <div class="preset-menu-heading" aria-hidden="true">英文</div>
+                      <button type="button" role="menuitemradio" aria-checked="false" data-preset="lorem">Lorem ipsum</button>
+                      <button type="button" role="menuitemradio" aria-checked="false" data-preset="quickfox">Quick fox</button>
+                    </div>
+                    <div role="group" aria-label="其他语言">
+                      <div class="preset-menu-heading" aria-hidden="true">其他语言</div>
+                      <button type="button" role="menuitemradio" aria-checked="false" data-preset="japanese">日文</button>
+                      <button type="button" role="menuitemradio" aria-checked="false" data-preset="korean">韩文</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div id="preview-history" class="preview-history">
+              <button id="preview-history-button" class="preview-restore dropdown-trigger" type="button" aria-label="历史示例文字" aria-haspopup="menu" aria-controls="preview-history-menu" aria-expanded="false"><svg aria-hidden="true"><use href="#i-clock"/></svg>历史<svg aria-hidden="true"><use href="#i-arrow"/></svg></button>
+              <div id="preview-history-menu" class="dropdown-menu preview-history-menu" role="menu" aria-label="历史示例文字" hidden>
+                <div id="preview-history-list" class="preview-history-list" role="none"></div>
+                <span id="preview-history-empty" class="preview-history-empty">还没有历史文字</span>
+                <button id="preview-history-clear" type="button" role="menuitem" tabindex="-1" data-history-clear><svg aria-hidden="true"><use href="#i-trash"/></svg>清空历史</button>
+              </div>
+            </div>
+            <label class="coverage-filter"><input id="coverage-filter" type="checkbox">只看不缺字</label>
+          </div>
+          <div class="preview-settings-end">
+            <label class="size-control"><span>Aa</span><input id="font-size" type="range" min="14" max="88" value="36" aria-label="预览字号"><output id="font-size-value">36</output><span class="unit">px</span></label><button id="invert-button" class="swatch-button" aria-pressed="false" title="切换深色试字背景" aria-label="切换深色试字背景"><span></span></button>
+          </div>
+        </div>
+      </section>
+      <button id="controls-toggle" class="controls-toggle" type="button" aria-controls="preview-settings sort-control" aria-expanded="true" aria-label="收起排序和示例文字设置" title="收起排序和示例文字设置"><svg aria-hidden="true"><use href="#i-arrow"/></svg></button>
+    </div>
+    <div id="font-results" class="font-results">
+    <div id="font-list-loading" class="font-list-loading" role="status" hidden>
+      <div class="font-loading-mark">
+        <svg class="font-loading-glyph" width="48" height="48" viewBox="0 0 12 12" aria-hidden="true">
+          <defs>
+            <mask id="font-loading-stroke-1" maskUnits="userSpaceOnUse" x="0" y="0" width="12" height="12"><path class="font-loading-trace font-loading-trace-1" pathLength="1" stroke-width="1.6" d="M4.6.8 5.4 1.3 6.3 1.8"/></mask>
+            <mask id="font-loading-stroke-2" maskUnits="userSpaceOnUse" x="0" y="0" width="12" height="12"><path class="font-loading-trace font-loading-trace-2" pathLength="1" stroke-width="1.5" d="M3 4 5.7 3.5 5.7 9.3 5.3 10.5 4.2 9.6"/></mask>
+            <mask id="font-loading-stroke-3" maskUnits="userSpaceOnUse" x="0" y="0" width="12" height="12"><path class="font-loading-trace font-loading-trace-3" pathLength="1" stroke-width="1.3" d="M.8 6.1 2 6.3 4.2 5.6 3.5 7.1 2 8.9 .5 9.7"/></mask>
+            <mask id="font-loading-stroke-4" maskUnits="userSpaceOnUse" x="0" y="0" width="12" height="12"><path class="font-loading-trace font-loading-trace-4" pathLength="1" stroke-width="1.4" d="M8.1 3.2 8.6 3.9 7.5 4.9 6.4 5.9"/></mask>
+            <mask id="font-loading-stroke-5" maskUnits="userSpaceOnUse" x="0" y="0" width="12" height="12"><path class="font-loading-trace font-loading-trace-5" pathLength="1" stroke-width="1.5" d="M5.5 5 7.1 6.9 8.9 8.6 11.5 8.9"/></mask>
+          </defs>
+          <g class="font-loading-ink" fill="currentColor">
+            <path mask="url(#font-loading-stroke-1)" d="M5.1.8h-.5q.9 1.3 1.6 1.3.3 0 .3-.4 0-1-1.4-1"/>
+            <path mask="url(#font-loading-stroke-2)" d="M5.7 10.6Q6 10 6 9.3L5.8 5q0-.7.3-1l.1-.4-.3-.3-.4-.2q-.1 0-.3.2-1 .6-2 .6H3q0 .3 1 .3l1.2-.1v4.6q0 1-.2 1l-1-.1H4v.1l.8.9.3.4q0 .3.2.2t.5-.6"/>
+            <path mask="url(#font-loading-stroke-3)" d="M3.5 6 2 6.5h-.6q-.3-.1-.5-.4V6h.5A6 6 0 0 0 4 5.3l.4.2.3.3q0 .1-.2.2l-.3.5-.7 1L2.1 9q-.9.7-1.5.7H.5l.3-.3Q2.3 8.5 3.2 7l.4-.8z"/>
+            <path mask="url(#font-loading-stroke-4)" d="M8 3.5q0 .8-1.6 2.2v.1l.1.1 1.8-1.2q.9-.5.9-.7l-.3-.6-.7-.3-.1.2z"/>
+            <path mask="url(#font-loading-stroke-5)" d="M11 8.7q-1.4-.3-2.3-.9Q7 6.6 5.8 5h-.3l.3.5L8.6 9l.6.1h1l.7-.1q.6 0 .6-.2z"/>
+          </g>
+        </svg>
+        <span id="font-loading-label">正在读取字体…</span>
+      </div>
+    </div>
+    <div id="font-list" class="font-list" aria-label="字体列表"></div>
+    <section id="empty-state" class="empty-state" hidden><span class="empty-symbol">Aa</span><h2 id="empty-title">还没有可预览的字体</h2><p id="empty-message">可以重新读取本机字体，或安装字体后再试</p><button id="reset-filters" class="button" type="button" hidden>清除筛选</button><button id="empty-show-all" class="button" type="button" data-scope="all" hidden>查看全部字体</button></section>
+    <div id="font-list-more" class="font-list-more" role="status" hidden></div>
+    </div>
+    <div id="compare-floating-bar" class="compare-floating-bar" hidden inert>
+      <section id="compare-selection" class="compare-selection" aria-label="已加入对比的字体" hidden>
+        <div class="compare-selection-heading"><span>已加入对比</span><button id="compare-selection-clear" type="button">全部清空</button></div>
+        <ul id="compare-selection-list" class="compare-selection-list"></ul>
+      </section>
+      <div class="compare-floating-actions">
+        <button id="compare-button" class="button button-dark" type="button" aria-haspopup="dialog" aria-controls="compare-dialog" aria-keyshortcuts="ArrowUp" disabled><svg aria-hidden="true"><use href="#i-compare"/></svg><span>开始对比</span><span id="compare-count">0</span></button>
+      </div>
+    </div>
+    <footer class="main-footer"><span>© 2026 Anyway.FM</span><span id="save-status" role="status" hidden></span></footer>
+  </main>
+  <aside id="font-inspector" class="inspector" aria-label="字体详情">
+    <div id="inspector-resizer" class="inspector-resizer" role="separator" tabindex="0" aria-label="调整字体详情宽度" aria-orientation="vertical" aria-controls="font-inspector" aria-valuemin="250" aria-valuemax="560" aria-valuenow="294" aria-keyshortcuts="ArrowLeft ArrowRight Home End Enter" title="拖动调整宽度，双击恢复默认，也可以用左右方向键调整、回车恢复"></div>
+    <div id="inspector-empty" class="inspector-empty"><div class="inspector-empty-content"><div class="inspector-letter">永<span>Aa</span></div><h2>选择左边的字体</h2><p>在这里看字形细节、样张和详细信息</p><div class="inspector-tip"><span><svg aria-hidden="true"><use href="#i-info"/></svg>小提示</span><p id="inspector-tip-text">中文名和英文名对不上？到「信息」里一起看</p></div></div></div>
+    <div id="inspector-content" hidden></div>
+  </aside>
+</div>
+  </div>
+<section id="fonts-startup-error" class="welcome" role="alert" data-nosnippet hidden>
+  <div class="welcome-shell">
+    <header class="welcome-header">
+      <h1 class="welcome-heading"><span class="welcome-title">Anyway<span class="brand-dot">.</span>Fonts</span></h1>
+      <p class="welcome-lead">页面资源没有加载完整，刷新后再试一次</p>
+      <div class="welcome-actions"><a class="button button-dark" rel="nofollow" href="/fonts/?_fonts_retry=0735386dd74f">重新加载页面</a></div>
+    </header>
+  </div>
+</section>
+<section id="welcome" class="welcome" role="dialog" aria-modal="true" aria-labelledby="welcome-title">
+  <div class="welcome-shell">
+    <header class="welcome-header">
+      <h1 id="welcome-title" class="welcome-heading">
+        <span class="welcome-title">Anyway<span class="brand-dot">.</span>Fonts</span>
+        <span id="welcome-description" class="welcome-lead">更懂中文的在线字体预览工具</span>
+      </h1>
+      <div class="welcome-actions">
+        <button id="welcome-connect" class="button button-dark" type="button" aria-describedby="welcome-start-hint"><span id="welcome-connect-label">读取本机字体</span><svg aria-hidden="true"><use href="#i-arrow"/></svg></button>
+        <span id="welcome-start-hint" class="welcome-start-hint">授权后马上开始使用 · 无需安装 · 无需登录 <button class="welcome-info-button" type="button" data-about="" aria-label="查看字体读取与使用说明" aria-haspopup="dialog" aria-controls="about-dialog"><svg aria-hidden="true"><use href="#i-info"/></svg></button></span>
+        <p id="welcome-unavailable" class="welcome-notice" role="status" hidden><span id="welcome-unavailable-message"></span> <button class="welcome-info-button" type="button" data-about="" aria-label="查看浏览器支持与使用说明" aria-haspopup="dialog" aria-controls="about-dialog"><svg aria-hidden="true"><use href="#i-info"/></svg></button></p>
+      </div>
+      <p id="welcome-notice" class="welcome-notice" role="status" hidden><span id="welcome-notice-message"></span> <button class="welcome-info-button" type="button" data-about="" aria-label="查看字体授权与使用说明" aria-haspopup="dialog" aria-controls="about-dialog"><svg aria-hidden="true"><use href="#i-info"/></svg></button></p>
+    </header>
+    <div class="welcome-features">
+      <article class="welcome-feature feature-coverage" tabindex="0" aria-labelledby="welcome-coverage-title">
+        <div class="feature-surface">
+          <div class="feature-copy"><h2 id="welcome-coverage-title">缺了哪些字，一眼看清</h2><span class="feature-number" aria-hidden="true">01</span></div>
+          <div class="feature-backdrop" aria-hidden="true"><span class="feature-mark"><svg viewBox="0 0 24 24"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5M8 16l4-8 4 8m-6.5-3h5"/></svg></span></div>
+          <div class="feature-body">
+            <div class="feature-demo demo-coverage-scene" aria-hidden="true" data-nosnippet>
+              <div class="demo-coverage-list">
+                <div class="demo-coverage-filter"><span class="demo-filter-check"><svg viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></svg></span><span>只看不缺字的</span></div>
+                <div class="font-row demo-font-incomplete"><div class="font-open"><div class="font-topline"><span class="font-name">基础字库示例</span><span class="coverage-note partial">缺 2 个字符</span></div><div class="font-sample demo-serif">陈<span class="missing-glyph">喆</span>与林<span class="missing-glyph">珺</span>的婚礼</div></div></div>
+                <div class="font-row demo-font-complete"><div class="font-open"><div class="font-topline"><span class="font-name">较全字库示例</span><span class="tag">这句不缺字</span></div><div class="font-sample demo-sans">陈喆与林珺的婚礼</div></div></div>
+              </div>
+              <div class="demo-glyph-audit">
+                <div class="demo-glyph-tile"><span class="demo-glyph-char demo-serif">喆</span><svg viewBox="0 0 24 24"><path d="m8 8 8 8m0-8-8 8"/></svg></div>
+                <div class="demo-glyph-tile"><span class="demo-glyph-char demo-serif">珺</span><svg viewBox="0 0 24 24"><path d="m8 8 8 8m0-8-8 8"/></svg></div>
+              </div>
+            </div>
+            <p class="feature-scene-note">挑字体做设计，先检查字体缺字情况</p>
+          </div>
+        </div>
+      </article>
+      <article class="welcome-feature feature-posters" tabindex="0" aria-labelledby="welcome-posters-title">
+        <div class="feature-surface">
+          <div class="feature-copy"><h2 id="welcome-posters-title">用样张看整体效果</h2><span class="feature-number" aria-hidden="true">02</span></div>
+          <div class="feature-backdrop" aria-hidden="true"><span class="feature-mark"><svg viewBox="0 0 24 24"><path d="M14 3H5v18h14V8ZM14 3v5h5M8 12h8M8 15h8M8 18h5"/></svg></span></div>
+          <div class="feature-body">
+            <div class="feature-demo demo-poster-gallery" aria-hidden="true" data-nosnippet>
+              <div class="demo-poster demo-poster-swiss demo-serif">
+                <span class="demo-poster-caption">01 / TYPE SPECIMEN</span>
+                <strong>文字<br>有声</strong>
+                <span class="demo-poster-bottom">FORM<br>RHYTHM / VOICE</span>
+              </div>
+              <div class="demo-poster demo-poster-editorial demo-serif">
+                <span class="demo-poster-caption">文字的日常</span>
+                <div class="demo-editorial-copy"><p>清晨的光落在桌边，翻开一本书，让目光沿着字句慢慢向前。</p><p>好的字体不只属于醒目的标题，也藏在一段读起来舒服的正文里。</p><p>字的大小、行间的留白、笔画的轻重，一起决定了阅读的节奏。</p></div>
+                <span class="demo-poster-bottom">READING NOTES / 03</span>
+              </div>
+              <div class="demo-poster demo-poster-mountain demo-serif">
+                <div class="demo-mountain-heading"><span class="demo-mountain-edition">字形地貌</span><span class="demo-mountain-subtitle">TOPOGRAPHY</span></div>
+                <svg class="demo-mountain-map" viewBox="0 0 400 500" aria-hidden="true"><g transform="translate(200 320)">
+                                    <g class="demo-mountain-contour" stroke-width="100.9" stroke-opacity="0.35"><text class="demo-mountain-glyph">山</text></g><g class="demo-mountain-gap" stroke-width="99.1"><text class="demo-mountain-glyph">山</text></g>
+                                    <g class="demo-mountain-contour" stroke-width="90.9" stroke-opacity="0.415"><text class="demo-mountain-glyph">山</text></g><g class="demo-mountain-gap" stroke-width="89.1"><text class="demo-mountain-glyph">山</text></g>
+                                    <g class="demo-mountain-contour" stroke-width="80.9" stroke-opacity="0.48"><text class="demo-mountain-glyph">山</text></g><g class="demo-mountain-gap" stroke-width="79.1"><text class="demo-mountain-glyph">山</text></g>
+                                    <g class="demo-mountain-contour" stroke-width="70.9" stroke-opacity="0.545"><text class="demo-mountain-glyph">山</text></g><g class="demo-mountain-gap" stroke-width="69.1"><text class="demo-mountain-glyph">山</text></g>
+                                    <g class="demo-mountain-contour" stroke-width="60.9" stroke-opacity="0.61"><text class="demo-mountain-glyph">山</text></g><g class="demo-mountain-gap" stroke-width="59.1"><text class="demo-mountain-glyph">山</text></g>
+                                    <g class="demo-mountain-contour" stroke-width="50.9" stroke-opacity="0.675"><text class="demo-mountain-glyph">山</text></g><g class="demo-mountain-gap" stroke-width="49.1"><text class="demo-mountain-glyph">山</text></g>
+                                    <g class="demo-mountain-contour" stroke-width="40.9" stroke-opacity="0.74"><text class="demo-mountain-glyph">山</text></g><g class="demo-mountain-gap" stroke-width="39.1"><text class="demo-mountain-glyph">山</text></g>
+                                    <g class="demo-mountain-contour" stroke-width="30.9" stroke-opacity="0.805"><text class="demo-mountain-glyph">山</text></g><g class="demo-mountain-gap" stroke-width="29.1"><text class="demo-mountain-glyph">山</text></g>
+                                    <g class="demo-mountain-contour" stroke-width="20.9" stroke-opacity="0.87"><text class="demo-mountain-glyph">山</text></g><g class="demo-mountain-gap" stroke-width="19.1"><text class="demo-mountain-glyph">山</text></g>
+                                    <g class="demo-mountain-contour" stroke-width="10.9" stroke-opacity="0.935"><text class="demo-mountain-glyph">山</text></g><g class="demo-mountain-gap" stroke-width="9.1"><text class="demo-mountain-glyph">山</text></g>
+                                    <g class="demo-mountain-core"><text class="demo-mountain-glyph">山</text></g>
+                </g></svg>
+                <span class="demo-poster-bottom demo-mountain-index">No.014</span>
+              </div>
+            </div>
+            <p class="feature-scene-note">挑海报标题或正文用字，用中文样张看整体排版效果</p>
+          </div>
+        </div>
+      </article>
+      <article class="welcome-feature feature-vertical" tabindex="0" aria-labelledby="welcome-vertical-title">
+        <div class="feature-surface">
+          <div class="feature-copy"><h2 id="welcome-vertical-title">横着看，也竖着比</h2><span class="feature-number" aria-hidden="true">03</span></div>
+          <div class="feature-backdrop" aria-hidden="true"><span class="feature-mark"><svg viewBox="0 0 24 24"><use href="#i-vertical"/></svg></span></div>
+          <div class="feature-body">
+            <div class="feature-demo demo-vertical-scene" aria-hidden="true" data-nosnippet>
+              <div class="demo-vertical-cards">
+                <div class="demo-vertical-card demo-serif"><span class="demo-vertical-label">宋体</span><div class="demo-vertical-text">永夜一禅子，<br>泠然心境中。</div></div>
+                <div class="demo-vertical-card demo-sans"><span class="demo-vertical-label">黑体</span><div class="demo-vertical-text">永夜一禅子，<br>泠然心境中。</div></div>
+                <div class="demo-vertical-card demo-fangsong"><span class="demo-vertical-label">仿宋</span><div class="demo-vertical-text">永夜一禅子，<br>泠然心境中。</div></div>
+              </div>
+            </div>
+            <p class="feature-scene-note">（可能是）东半球最方便竖着挑字的在线工具</p>
+          </div>
+        </div>
+      </article>
+    </div>
+    <ul class="welcome-extras" aria-label="还有这些小功能">
+      <li><svg aria-hidden="true"><use href="#i-character-set"/></svg><span>查看各类字符集覆盖情况</span></li>
+      <li><svg aria-hidden="true"><use href="#i-star"/></svg><span>收藏喜欢的字体</span></li>
+      <li><svg aria-hidden="true"><use href="#i-grid"/></svg><span>按中文风格筛选</span></li>
+      <li><svg aria-hidden="true"><use href="#i-list"/></svg><span>随机、按出品方等排列方式</span></li>
+      <li><svg aria-hidden="true"><use href="#i-glyph-features"/></svg><span>查看 OpenType 字形特性</span></li>
+      <li><svg aria-hidden="true"><use href="#i-compare"/></svg><span>叠起来比较字形</span></li>
+    </ul>
+    <footer class="welcome-footer"><button id="welcome-about" class="text-button" type="button" data-about="" aria-haspopup="dialog" aria-controls="about-dialog">关于</button><button class="text-button" type="button" data-support="" aria-haspopup="dialog" aria-controls="support-dialog">请我们喝杯咖啡</button><button id="welcome-changelog" class="text-button" type="button" aria-haspopup="dialog" aria-controls="changelog-dialog">更新历史</button><button id="welcome-settings" class="text-button" type="button" data-settings="" aria-expanded="false" aria-controls="settings-panel">设置</button><span class="welcome-copyright">© 2026 <a href="https://Anyway.FM" target="_blank">Anyway.FM</a></span></footer>
+  </div>
+</section>
+<dialog id="login-dialog" class="modal login-modal"><button class="dialog-close" data-close="login-dialog" aria-label="关闭登录窗口"><svg><use href="#i-close"/></svg></button><h2>登录 / 注册</h2><p>用 Anyway.FM 账号同步收藏，没有账号的话，这封邮件也会帮你注册</p><form id="login-form" action="/member/auth.php" method="post"><input type="hidden" name="action" value="send_magic_link"><input type="hidden" name="return_to" value="/fonts/"><label for="login-email">邮箱地址</label><input id="login-email" type="email" name="email" placeholder="hello@example.com" autocomplete="email" required maxlength="254"><button class="button button-dark" type="submit">发一封登录 / 注册邮件</button><p id="login-status" role="status"></p></form><p class="modal-footnote">不登录也可使用，收藏会只保存在本地~</p></dialog>
+<dialog id="about-dialog" class="modal"><button class="dialog-close" data-close="about-dialog" aria-label="关闭使用说明"><svg><use href="#i-close"/></svg></button><h2>关于 Anyway.Fonts</h2><p>我们想做一个更懂中文的挑字工具，让试字、比较和探索字形都轻松一点，也让字体里藏着的小巧思更容易被看见</p><p>点击「读取本机字体」，允许浏览器访问，就能浏览、试字、比较和收藏已经安装的字体</p><ul class="about-list"><li>目前支持桌面版 Chrome / Edge 等，Safari、Firefox 和手机浏览器暂不支持，因为这些浏览器不提供本地字体访问功能</li><li>字体文件留在你的电脑里，在本机解析，不会上传；登录后只同步收藏的字体名称，换台电脑仍需安装对应字体</li><li>风格根据字体名称整理，语言根据代表字符检测，仅供筛选参考；缺字检测直接读取当前字体的字符表</li><li>缺字会标出来，并用系统字体代显；字符表检测不代表连字、组合字符或彩色表情都能正确排版</li><li>OpenType 字形特性目前主要展示可直接读取的字形替换，上下文、定位和可变字体等规则可能无法完整展开；没有显示示例不代表字体没有这个功能，解释介绍的是通用用途，具体效果还取决于字体、文字和排版软件</li><li>授权信息来自字体内附说明，具体使用范围请向字体作者确认</li></ul><p class="modal-footnote">Made by JJ Ying @ Anyway.FM with ❤️</p></dialog>
+<dialog id="advanced-dialog" class="modal advanced-modal" aria-labelledby="advanced-title">
+  <button class="dialog-close" type="button" data-close="advanced-dialog" aria-label="关闭字形特性" autofocus><svg><use href="#i-close"/></svg></button>
+  <header class="advanced-header"><h2 id="advanced-title"></h2></header>
+  <div class="advanced-toolbar">
+    <div id="advanced-style" class="advanced-style-switcher view-switch" role="group" aria-label="字体样式"></div>
+    <div id="advanced-sort" class="advanced-sort view-switch" role="group" aria-label="特性排序" hidden><button type="button" data-feature-sort="group" aria-pressed="true" title="按用途分组">分组</button><button type="button" data-feature-sort="name" aria-pressed="false" title="按标签字母排序">A–Z</button></div>
+  </div>
+  <div class="advanced-body">
+    <p id="advanced-status" role="status">正在准备字形特性…</p><button id="advanced-retry" class="button" type="button" hidden>重新读取</button>
+    <div id="advanced-content" hidden>
+      <p id="advanced-warnings" class="advanced-warning" role="status" hidden></p>
+      <div id="advanced-features-list"></div>
+    </div>
+  </div>
+  <footer class="advanced-guide-footer"><a class="advanced-guide-link" href="/fonts/opentype.php" target="_blank" rel="noopener noreferrer">OpenType 特性指南 <svg aria-hidden="true"><use href="#i-external"/></svg></a></footer>
+  <div id="advanced-feature-help" class="advanced-feature-help" popover="auto" role="region"><p id="advanced-feature-help-text"></p><a id="advanced-feature-help-link" target="_blank" rel="noopener noreferrer">查看 W3C 文档 <svg aria-hidden="true"><use href="#i-external"/></svg></a></div>
+</dialog>
+<dialog id="changelog-dialog" class="modal changelog-modal" aria-label="更新历史">
+  <button class="dialog-close" type="button" data-close="changelog-dialog" aria-label="关闭更新历史" autofocus><svg aria-hidden="true"><use href="#i-close"/></svg></button>
+  <iframe id="changelog-frame" title="Anyway.Fonts 更新历史" data-src="/fonts/changelog.php?v=2026102601-9b9511572d62be85"></iframe>
+</dialog>
+<dialog id="font-errors-dialog" class="modal font-errors-modal" aria-labelledby="font-errors-title" aria-describedby="font-errors-summary">
+  <button class="dialog-close" type="button" data-close="font-errors-dialog" aria-label="关闭字体读取详情"><svg aria-hidden="true"><use href="#i-close"/></svg></button>
+  <h2 id="font-errors-title">字体读取详情</h2>
+  <p id="font-errors-summary"></p>
+  <ul id="font-errors-list" class="font-errors-list"></ul>
+  <p class="modal-footnote">信息未能解析的字体仍可能正常预览，可以重新读取字体再试一次</p>
+</dialog>
+<dialog id="compare-dialog" class="modal compare-modal" aria-labelledby="compare-title" data-mode="overlay">
+  <div class="compare-heading">
+    <h2 id="compare-title">字体对比</h2>
+    <div class="compare-mode-switch" role="group" aria-label="对比模式"><button type="button" data-compare-mode="side" aria-pressed="false">并排</button><button type="button" data-compare-mode="rows" aria-pressed="false">逐行</button><button type="button" data-compare-mode="overlay" aria-pressed="true">叠加</button></div>
+    <button class="dialog-close" type="button" data-close="compare-dialog" aria-label="关闭字体对比"><svg aria-hidden="true"><use href="#i-close"/></svg></button>
+  </div>
+  <section id="compare-preview-controls" class="preview-controls" aria-label="对比示例文字设置">
+    <div class="preview-input-wrap">
+      <textarea id="compare-preview-text" rows="2" maxlength="500" spellcheck="false" placeholder="示例文字，留空时显示字体名称" aria-label="自定义示例文字，留空时显示字体名称" aria-keyshortcuts="T">永和九年，岁在癸丑，暮春之初，会于会稽山阴之兰亭。群贤毕至，少长咸集。</textarea>
+      <kbd title="按 T 编辑示例文字" aria-hidden="true">T</kbd>
+    </div>
+    <div id="compare-preview-settings" class="preview-settings">
+      <div class="preview-settings-start">
+        <div id="compare-presets" class="preset-buttons" role="group" aria-label="预置示例文字">
+          <button type="button" data-preset="chinese" class="active" aria-pressed="true">中文</button><button type="button" data-preset="letters" aria-pressed="false">字母</button><button type="button" data-preset="numbers" aria-pressed="false">数字</button>
+          <div id="compare-preset-more" class="preset-more">
+            <button id="compare-preset-more-button" class="dropdown-trigger" type="button" aria-haspopup="menu" aria-controls="compare-preset-menu" aria-expanded="false">其他<svg aria-hidden="true"><use href="#i-arrow"/></svg></button>
+            <div id="compare-preset-menu" class="dropdown-menu preset-menu" role="menu" aria-label="其他示例文字" hidden>
+              <div class="preset-menu-column" role="presentation">
+                <div role="group" aria-label="中文">
+                  <div class="preset-menu-heading" aria-hidden="true">中文</div>
+                  <button type="button" role="menuitemradio" aria-checked="false" data-preset="modern">现代文</button>
+                  <button type="button" role="menuitemradio" aria-checked="false" data-preset="traditional">繁体中文</button>
+                  <button type="button" role="menuitemradio" aria-checked="false" data-preset="radicals">偏旁部首</button>
+                  <button type="button" role="menuitemradio" aria-checked="false" data-preset="strokes">基础笔画</button>
+                  <button type="button" role="menuitemradio" aria-checked="false" data-preset="punctuation">常用标点</button>
+                </div>
+              </div>
+              <div class="preset-menu-column" role="presentation">
+                <div role="group" aria-label="英文">
+                  <div class="preset-menu-heading" aria-hidden="true">英文</div>
+                  <button type="button" role="menuitemradio" aria-checked="false" data-preset="lorem">Lorem ipsum</button>
+                  <button type="button" role="menuitemradio" aria-checked="false" data-preset="quickfox">Quick fox</button>
+                </div>
+                <div role="group" aria-label="其他语言">
+                  <div class="preset-menu-heading" aria-hidden="true">其他语言</div>
+                  <button type="button" role="menuitemradio" aria-checked="false" data-preset="japanese">日文</button>
+                  <button type="button" role="menuitemradio" aria-checked="false" data-preset="korean">韩文</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div id="compare-preview-history" class="preview-history">
+          <button id="compare-preview-history-button" class="preview-restore dropdown-trigger" type="button" aria-label="历史示例文字" aria-haspopup="menu" aria-controls="compare-preview-history-menu" aria-expanded="false"><svg aria-hidden="true"><use href="#i-clock"/></svg>历史<svg aria-hidden="true"><use href="#i-arrow"/></svg></button>
+          <div id="compare-preview-history-menu" class="dropdown-menu preview-history-menu" role="menu" aria-label="历史示例文字" hidden>
+            <div id="compare-preview-history-list" class="preview-history-list" role="none"></div>
+            <span id="compare-preview-history-empty" class="preview-history-empty">还没有历史文字</span>
+            <button id="compare-preview-history-clear" type="button" role="menuitem" tabindex="-1" data-history-clear><svg aria-hidden="true"><use href="#i-trash"/></svg>清空历史</button>
+          </div>
+        </div>
+        <label class="coverage-filter"><input id="compare-coverage-filter" type="checkbox">只看不缺字的</label>
+      </div>
+      <div class="preview-settings-end">
+        <label class="size-control"><span>Aa</span><input id="compare-font-size" type="range" min="14" max="88" value="36" aria-label="预览字号"><output id="compare-font-size-value" for="compare-font-size">36</output><span class="unit">px</span></label>
+        <label class="line-height-control"><span title="行高"><svg aria-hidden="true"><use href="#i-line-height"/></svg></span><input id="compare-line-height" type="range" min="0.7" max="2" step="0.05" value="1.35" aria-label="对比行高"><output id="compare-line-height-value" for="compare-line-height">1.35</output><span class="unit">倍</span></label>
+        <button id="compare-invert-button" class="swatch-button" type="button" aria-pressed="false" title="切换深色试字背景" aria-label="切换深色试字背景"><span></span></button>
+      </div>
+    </div>
+  </section>
+  <p id="compare-filter-note" class="compare-filter-note" role="status" hidden></p>
+  <div id="compare-overlay" class="compare-overlay" hidden><div class="compare-drag-tools"><span>拖动对齐</span><div id="compare-drag-fonts" role="group" aria-label="选择要移动的字体"></div><button id="compare-drag-reset" type="button" disabled>重置</button></div><div id="compare-layers" class="compare-layers" tabindex="0" role="region" aria-label="叠加预览，可拖动所选字体对齐"></div></div>
+  <div id="compare-list" class="compare-list compare-overlay"></div>
+</dialog>
+<dialog id="support-dialog" class="modal support-modal" aria-labelledby="support-title" aria-describedby="support-description">
+  <button class="dialog-close" type="button" data-close="support-dialog" aria-label="关闭咖啡弹窗"><svg aria-hidden="true"><use href="#i-close"/></svg></button>
+  <div class="support-heading">
+    <span class="support-cup" aria-hidden="true"><svg><use href="#i-coffee"/></svg></span>
+    <div class="support-heading-copy">
+      <h2 id="support-title">请我们喝杯咖啡</h2>
+      <p id="support-description">挑到喜欢的字体？赞助我们让它变得更好~</p>
+    </div>
+  </div>
+  <form id="support-form" novalidate>
+    <fieldset id="support-fields" disabled>
+      <legend>选个金额（人民币）</legend>
+      <div class="support-amounts" role="group" aria-label="支持金额">
+        <button type="button" data-support-amount="1000" aria-pressed="false" aria-label="10 元人民币">¥10</button>
+        <button type="button" data-support-amount="2000" aria-pressed="true" aria-label="20 元人民币">¥20</button>
+        <button type="button" data-support-amount="5000" aria-pressed="false" aria-label="50 元人民币">¥50</button>
+        <button id="support-custom-button" type="button" aria-pressed="false" aria-controls="support-custom-wrap">其他金额</button>
+      </div>
+      <div id="support-custom-wrap" hidden>
+        <label for="support-custom">自定义金额（元）</label>
+        <input id="support-custom" type="number" min="5" max="1000" step="0.01" inputmode="decimal" placeholder="例如 30" aria-describedby="support-custom-hint">
+
+      </div>
+      <div class="support-methods-wrap">
+        <span class="support-methods-label">支付方式</span>
+        <div class="support-methods" role="group" aria-label="支付方式">
+          <button type="button" data-support-method="wechat_pay" aria-pressed="true">微信</button>
+          <button type="button" data-support-method="alipay" aria-pressed="false">支付宝</button>
+          <button type="button" data-support-method="card" aria-pressed="false">银行卡</button>
+        </div>
+      </div>
+      <button id="support-submit" class="button button-dark" type="submit">确认支付 · ¥20</button>
+    </fieldset>
+    <section id="support-payment" class="support-payment" aria-label="付款状态" hidden>
+      <img id="support-qr" alt="用微信扫描二维码付款" width="220" height="220" referrerpolicy="no-referrer" hidden>
+      <p id="support-payment-message" role="status" aria-live="polite"></p>
+      <button id="support-check" class="text-button" type="button" hidden>我已支付，检查一下</button>
+    </section>
+    <p id="support-status" role="status" aria-live="polite">正在准备…</p>
+    <button id="support-retry" class="text-button" type="button" data-support="" hidden>重新加载</button>
+  </form>
+  <p class="modal-footnote">自愿支持 · 不影响任何功能 · 一次性支付 · 无需登录 · 由 Stripe 处理</p>
+</dialog>
+<section id="settings-panel" class="settings-panel" role="region" aria-label="设置与帮助" hidden>
+  <button id="about-button" class="sidebar-action" type="button"><svg aria-hidden="true"><use href="#i-info"/></svg><span>使用说明</span></button>
+  <button id="settings-connect-button" class="sidebar-action" type="button" title="新安装的字体可能需要重启浏览器后才能读到"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-refresh"/></svg><span>重新读取字体</span></button>
+  <div id="font-library-notice" class="font-library-notice" hidden>
+    <span id="scan-status" hidden><button id="scan-errors-button" class="text-button" type="button" aria-haspopup="dialog" aria-controls="font-errors-dialog" hidden></button><span>信息未能解析</span></span>
+    <p id="library-read-error" role="status" hidden></p>
+  </div>
+  <button id="changelog-button" class="sidebar-action" type="button" aria-haspopup="dialog" aria-controls="changelog-dialog"><svg aria-hidden="true"><use href="#i-calendar"/></svg><span>更新历史</span></button>
+  <button id="account-button" class="sidebar-action" type="button"><svg aria-hidden="true"><use href="#i-user"/></svg><span id="account-label">登录 / 同步收藏</span></button>
+  <fieldset class="theme-settings" aria-label="页面主题">
+    <div class="theme-options">
+      <button id="theme-system" type="button" data-theme-choice="system" aria-pressed="true">跟随系统</button>
+      <button id="theme-light" type="button" data-theme-choice="light" aria-pressed="false"><svg aria-hidden="true"><use href="#i-sun"/></svg><span>浅色</span></button>
+      <button id="theme-dark" type="button" data-theme-choice="dark" aria-pressed="false"><svg aria-hidden="true"><use href="#i-moon"/></svg><span>深色</span></button>
+    </div>
+  </fieldset>
+</section>
+<aside id="update-notice" class="update-notice" data-build="2026102601" aria-labelledby="update-notice-title" hidden>
+  <button id="update-notice-close" class="update-notice-close" type="button" aria-label="关闭更新提示"><svg aria-hidden="true"><use href="#i-close"/></svg></button>
+  <div role="status">
+    <span class="update-notice-label"><svg aria-hidden="true"><use href="#i-refresh"/></svg>最近更新</span>
+    <h2 id="update-notice-title">喜欢的字体，分组收好</h2>
+    <p>• 收藏可以分组了，同一款字体能放进多个分组
+
+• 悬浮在星星或右侧收藏按钮上选分组，也能直接新建</p>
+  </div>
+</aside>
+<div id="toast" class="toast" role="status" hidden></div>
+<noscript><div class="no-script">这个工具需要开启 JavaScript，使用桌面 Chrome 等浏览器打开就好</div></noscript>
+  </div>
+</div>
+</body>
+</html>

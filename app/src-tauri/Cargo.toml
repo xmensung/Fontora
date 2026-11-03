@@ -1,6 +1,6 @@
 [package]
 name = "fontora"
-version = "0.9.0"
+version = "0.10.0"
 description = "Fontora — a clean font manager: preview, tag, organize, activate/deactivate and install fonts"
 authors = ["TheHolyOneZ"]
 license = "GPL-3.0-only"

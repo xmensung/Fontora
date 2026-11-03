@@ -30,7 +30,8 @@ export function suggestTags(f: SuggestInput): string[] {
   const name = f.family;
   const cls = f.classification.toLowerCase();
   const hasHan = (f.cjk?.han ?? 0) > 0;
-  const isCJK = f.scripts.includes("Han") || hasHan;
+  // scripts 里报的是 `cjk`（parser::script_coverage 的键名），不是 "Han"。
+  const isCJK = f.scripts.includes("cjk") || hasHan;
 
   // ---- 书体源流 ----
   if (isCJK) {
@@ -78,7 +79,7 @@ export function suggestTags(f: SuggestInput): string[] {
   if (f.monospaced) out.add("等宽");
   if (f.isVariable) out.add("可变字体");
   if (f.italic) out.add("斜体");
-  if (isCJK && f.scripts.includes("Latin")) out.add("中英混排");
+  if (isCJK && f.scripts.includes("latin")) out.add("中英混排");
   if (f.coverage?.listed.some((r) => r.group === "trad" && r.stars !== null && r.stars >= 2)) {
     out.add("繁体支持");
   }

@@ -229,6 +229,16 @@ export interface SampleLine {
   size: number;
 }
 
+/** `check_glyphs` 的单个字面结果。 */
+export interface GlyphReport {
+  path: string;
+  faceIndex: number;
+  /** 这段文字里该字面缺的码点（升序、去重） */
+  missing: number[];
+  /** 参与判定的字符数（已去掉空白与控制符） */
+  checked: number;
+}
+
 /** 一个重复字体组（与 Rust 端 dupe::DupeGroup 对应）。 */
 export interface DupeFile {
   path: string;
@@ -604,6 +614,10 @@ export const ipc = {
   pinyinKeys: (names: string[]) => invoke<Record<string, string[]>>("pinyin_keys", { names }),
   getCharset: (path: string, faceIndex: number) =>
     invoke<number[]>("get_charset", { path, faceIndex }),
+  /** 逐字问字体「这些字你有没有」。返回每个字面缺的码点。 */
+  checkGlyphs: (faces: [string, number][], text: string) =>
+    invoke<GlyphReport[]>("check_glyphs", { faces, text }),
+  clearGlyphCache: () => invoke<void>("clear_glyph_cache"),
   fontDetail: (path: string, faceIndex: number) =>
     invoke<FontDetail>("font_detail", { path, faceIndex }),
   fontDuplicates: () => invoke<DupeGroup[]>("font_duplicates"),

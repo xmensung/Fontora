@@ -1,0 +1,115 @@
+/* ============================================================
+   青瓷 Celadon —— 釉青、灰白、一线水光。
+   只覆盖配色 token 与氛围装饰，不动布局与既有规则。
+   ============================================================ */
+
+/* ---- 深色：窑变 ---- */
+:root[data-skin="celadon"] {
+  --canvas: #0a1211;
+  --ink-rgb: 226, 240, 236;
+  --scrim-rgb: 10, 18, 17;
+
+  --text-primary: #e2f0ec;
+  --text-secondary: rgba(226, 240, 236, 0.62);
+  --text-tertiary: rgba(226, 240, 236, 0.4);
+  --text-disabled: rgba(226, 240, 236, 0.25);
+
+  --e1: rgba(226, 240, 236, 0.04);
+  --e2: rgba(226, 240, 236, 0.07);
+  --e3: rgba(226, 240, 236, 0.1);
+  --e4: rgba(226, 240, 236, 0.12);
+
+  --glass-border: rgba(125, 214, 196, 0.14);
+  --glass-top-highlight: rgba(226, 240, 236, 0.1);
+  --glass-top-highlight-strong: rgba(226, 240, 236, 0.16);
+
+  --shadow-ground: 0 1px 2px rgba(0, 0, 0, 0.45);
+  --shadow-mass: 0 6px 12px rgba(0, 0, 0, 0.34);
+  --shadow-ambient: 0 24px 48px rgba(0, 0, 0, 0.28);
+
+  --accent-a: #64d8bd;
+  --accent-b: #178f96;
+  --accent-rgb: 100, 216, 189;
+  --accent-rgb-2: 46, 120, 150;
+  --accent-gradient: linear-gradient(135deg, #64d8bd, #178f96);
+  --accent-glow: rgba(var(--accent-rgb), 0.5);
+  --accent-glow-soft: rgba(var(--accent-rgb), 0.24);
+  --on-accent: #03201c;
+
+  --stack-ink-1: #eaf6f3;
+  --stack-ink-2: #ff9d8a;
+  --stack-ink-3: #8ad2f0;
+  --stack-ink-4: #cbb6ff;
+
+  --tooltip-bg: #101d1b;
+  --hero-grad: linear-gradient(180deg, #eaf6f3, rgba(234, 246, 243, 0.55));
+  --settings-glass-grad: linear-gradient(
+    165deg,
+    rgba(226, 240, 236, 0.11),
+    rgba(226, 240, 236, 0.045) 45%,
+    rgba(226, 240, 236, 0.07)
+  );
+}
+
+/* 釉面反光：自右上压下来的一层青光 */
+:root[data-skin="celadon"] .app-frame::before {
+  background:
+    radial-gradient(58% 48% at 80% 6%, rgba(100, 216, 189, 0.13), transparent 70%),
+    radial-gradient(46% 40% at 8% 94%, rgba(23, 143, 150, 0.12), transparent 70%);
+}
+
+/* ---- 浅色：粉青 ---- */
+:root[data-skin="celadon"][data-theme="light"] {
+  --canvas: #eef4f1;
+  --ink-rgb: 22, 40, 37;
+  --scrim-rgb: 26, 46, 43;
+
+  --text-primary: #162825;
+  --text-secondary: rgba(22, 40, 37, 0.66);
+  --text-tertiary: rgba(22, 40, 37, 0.46);
+  --text-disabled: rgba(22, 40, 37, 0.28);
+
+  --e1: rgba(22, 40, 37, 0.045);
+  --e2: rgba(22, 40, 37, 0.075);
+  --e3: #ffffff;
+  --e4: #ffffff;
+
+  --glass-border: rgba(22, 40, 37, 0.1);
+  --glass-top-highlight: rgba(255, 255, 255, 0.92);
+  --glass-top-highlight-strong: #ffffff;
+
+  --accent-a: #0e7a80;
+  --accent-b: #14655f;
+  --accent-rgb: 14, 122, 128;
+  --accent-rgb-2: 58, 132, 110;
+  --accent-gradient: linear-gradient(135deg, #0e7a80, #14655f);
+  --accent-glow: rgba(var(--accent-rgb), 0.32);
+  --accent-glow-soft: rgba(var(--accent-rgb), 0.14);
+  --on-accent: #ffffff;
+
+  --stack-ink-1: #162825;
+  --stack-ink-2: #b03a2e;
+  --stack-ink-3: #1f6f8b;
+  --stack-ink-4: #5b4b8a;
+
+  --tooltip-bg: #ffffff;
+  --hero-grad: linear-gradient(180deg, #162825, rgba(22, 40, 37, 0.6));
+  --settings-glass-grad: linear-gradient(
+    165deg,
+    rgba(255, 255, 255, 0.97),
+    rgba(255, 255, 255, 0.93) 45%,
+    rgba(255, 255, 255, 0.96)
+  );
+}
+
+:root[data-skin="celadon"][data-theme="light"] .titlebar,
+:root[data-skin="celadon"][data-theme="light"] .sidebar,
+:root[data-skin="celadon"][data-theme="light"] .topbar,
+:root[data-skin="celadon"][data-theme="light"] .list-header {
+  background: rgba(255, 255, 255, 0.86);
+}
+
+:root[data-skin="celadon"][data-theme="light"] .glass-e3,
+:root[data-skin="celadon"][data-theme="light"] .settings-panel {
+  background: rgba(255, 255, 255, 0.97);
+}

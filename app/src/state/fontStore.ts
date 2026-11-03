@@ -19,6 +19,7 @@ import {
   type UsageRow,
 } from "../lib/ipc";
 import { matchAffinityFonts, type AffinityEvent } from "../lib/affinity";
+import { bookStyleOf, type BookStyle } from "../lib/bookStyle";
 import { toast } from "../design/primitives/Toast";
 import { setSoundLevel, type SoundLevel } from "../lib/sound";
 import { applySkin, applyTheme, type SkinPref, type ThemePref } from "../lib/theme";
@@ -189,6 +190,25 @@ interface FontStore {
   pinyinKeys: Record<string, string[]>;
   /** 评分筛选：全部 / 四星以上 / 没评分。 */
   ratingFilter: RatingFilter;
+  /** 中文书体筛选（黑/宋/楷/仿宋/圆/隶/篆/行草/其他），空数组＝不限。 */
+  bookFilter: BookStyle[];
+  /** 当前预览文本用的是哪套预设（null = 用户自己敲的）。 */
+  samplePreset: string | null;
+  /** 自定义预览文本历史（最近 10 条，新的在前）。 */
+  sampleHistory: string[];
+  /** 行高倍数，1.0–2.4。卡片与详情页共用。 */
+  lineHeight: number;
+  /** 竖排预览。中文排竖排才看得出标点和字面的真功夫。 */
+  vertical: boolean;
+  /** 只看「当前预览文字一个不缺」的字体。 */
+  missingOnly: boolean;
+  /** 家族名 → 该字面缺的码点。只对 `glyphText` 这段文字有效。 */
+  glyphMissing: Record<string, number[]>;
+  /** `glyphMissing` 是按哪段文字算出来的，跟当前文本不一致就说明结果过期。 */
+  glyphText: string;
+  /** 上次计算覆盖到的家族名单，筛选一变就得重算。 */
+  glyphScope: string;
+  glyphLoading: boolean;
   /** 正在编辑别名的家族，null = 没开。 */
   aliasFor: string | null;
 
@@ -277,6 +297,14 @@ interface FontStore {
   setDuplicateReport: (r: { names: string[]; at: number } | null) => void;
 
   setSampleText: (t: string) => void;
+  applySamplePreset: (presetId: string | null, text: string) => void;
+  clearSampleHistory: () => void;
+  setLineHeight: (v: number) => void;
+  setVertical: (on: boolean) => void;
+  setMissingOnly: (on: boolean) => void;
+  toggleBookFilter: (style: BookStyle) => void;
+  clearBookFilter: () => void;
+  refreshGlyphs: (force?: boolean) => Promise<void>;
   setSizeIndex: (i: number) => void;
   setViewMode: (m: ViewMode) => void;
   setSort: (s: SortMode) => void;
@@ -312,6 +340,10 @@ function persistPrefs(get: () => FontStore) {
     void ipc.setPrefs({
       sampleText: s.sampleText,
       sizeIndex: s.sizeIndex,
+      samplePreset: s.samplePreset,
+      sampleHistory: s.sampleHistory,
+      lineHeight: s.lineHeight,
+      vertical: s.vertical,
       viewMode: s.viewMode,
       sort: s.sort,
       motionPref: s.motionPref,
@@ -328,6 +360,24 @@ function persistPrefs(get: () => FontStore) {
       lastImported: s.lastImported,
     });
   }, 600);
+}
+
+// 预览文本的历史不是每敲一个字都记 —— 等 900ms 没有新输入再落一条，
+// 否则打一句「春风又绿江南岸」会在历史里留下十几个半截句子。
+let sampleTimer: ReturnType<typeof setTimeout> | undefined;
+function scheduleSampleHistory(
+  set: (partial: Partial<FontStore>) => void,
+  get: () => FontStore,
+) {
+  clearTimeout(sampleTimer);
+  sampleTimer = setTimeout(() => {
+    const s = get();
+    const text = s.sampleText.trim();
+    if (text.length < 2) return;
+    if (s.sampleHistory[0] === text) return;
+    set({ sampleHistory: [text, ...s.sampleHistory.filter((x) => x !== text)].slice(0, 10) });
+    persistPrefs(get);
+  }, 900);
 }
 
 export const useFontStore = create<FontStore>((set, get) => ({
@@ -380,6 +430,16 @@ export const useFontStore = create<FontStore>((set, get) => ({
 
   sampleText: t("preview.defaultSample"),
   sizeIndex: 3,
+  samplePreset: null,
+  sampleHistory: [],
+  lineHeight: 1.5,
+  vertical: false,
+  missingOnly: false,
+  glyphMissing: {},
+  glyphText: "",
+  glyphScope: "",
+  glyphLoading: false,
+  bookFilter: [],
   viewMode: "grid",
   sort: "name",
   search: "",
@@ -426,6 +486,17 @@ export const useFontStore = create<FontStore>((set, get) => ({
       set({
         sampleText: typeof prefs.sampleText === "string" ? prefs.sampleText : get().sampleText,
         sizeIndex: typeof prefs.sizeIndex === "number" ? prefs.sizeIndex : get().sizeIndex,
+        samplePreset: typeof prefs.samplePreset === "string" ? prefs.samplePreset : null,
+        sampleHistory: Array.isArray(prefs.sampleHistory)
+          ? (prefs.sampleHistory as unknown[])
+              .filter((n): n is string => typeof n === "string")
+              .slice(0, 10)
+          : [],
+        lineHeight:
+          typeof prefs.lineHeight === "number"
+            ? Math.min(2.4, Math.max(1, prefs.lineHeight))
+            : 1.5,
+        vertical: prefs.vertical === true,
         viewMode: (["grid", "list", "waterfall"] as const).includes(
           prefs.viewMode as ViewMode,
         )
@@ -450,7 +521,7 @@ export const useFontStore = create<FontStore>((set, get) => ({
         themePref: (["dark", "light", "system"] as const).includes(prefs.themePref as ThemePref)
           ? (prefs.themePref as ThemePref)
           : "light",
-        skinPref: (["default", "ink", "neon"] as const).includes(prefs.skinPref as SkinPref)
+        skinPref: (["default", "celadon", "ink", "neon"] as const).includes(prefs.skinPref as SkinPref)
           ? (prefs.skinPref as SkinPref)
           : "default",
         onboarded: prefs.onboarded === true,
@@ -1375,8 +1446,92 @@ export const useFontStore = create<FontStore>((set, get) => ({
   setDuplicateReport: (duplicateReport) => set({ duplicateReport }),
 
   setSampleText: (sampleText) => {
-    set({ sampleText });
+    set({ sampleText, samplePreset: null });
     persistPrefs(get);
+    scheduleSampleHistory(set, get);
+  },
+  applySamplePreset: (presetId, text) => {
+    if (sampleTimer) clearTimeout(sampleTimer);
+    set({ sampleText: text, samplePreset: presetId });
+    persistPrefs(get);
+  },
+  clearSampleHistory: () => {
+    set({ sampleHistory: [] });
+    persistPrefs(get);
+  },
+  setLineHeight: (lineHeight) => {
+    set({ lineHeight: Math.min(2.4, Math.max(1, Math.round(lineHeight * 100) / 100)) });
+    persistPrefs(get);
+  },
+  setVertical: (vertical) => {
+    set({ vertical });
+    persistPrefs(get);
+  },
+  setMissingOnly: (missingOnly) => {
+    set({ missingOnly });
+    if (missingOnly) void get().refreshGlyphs();
+  },
+  toggleBookFilter: (style) => {
+    const cur = get().bookFilter;
+    set({
+      bookFilter: cur.includes(style) ? cur.filter((x) => x !== style) : [...cur, style],
+    });
+  },
+  clearBookFilter: () => set({ bookFilter: [] }),
+  refreshGlyphs: async (force = false) => {
+    const s = get();
+    const text = s.sampleText.trim();
+    if (!text) {
+      set({ glyphMissing: {}, glyphText: "", glyphLoading: false });
+      return;
+    }
+    if (s.glyphLoading) return;
+
+    const fams = selectVisibleFamilies(s).slice(0, 1200);
+    // 覆盖范围变了（换了筛选/进了别的分类）也要重算，否则新露出来的字体没有结论。
+    const scope = fams.map((f) => f.name).join("\n");
+    if (!force && s.glyphText === text && s.glyphScope === scope) return;
+    const faces: [string, number][] = [];
+    const keyToFamilies = new Map<string, string[]>();
+    const seen = new Set<string>();
+    for (const fam of fams) {
+      const lead = fam.faces.find((f) => f.style === "Regular") ?? fam.faces[0];
+      if (!lead) continue;
+      const key = `${lead.previewPath ?? lead.path}#${lead.faceIndex}`;
+      // 同一份文件被多个族共用时只问一次，回来再分发给各族。
+      const owners = keyToFamilies.get(key) ?? [];
+      owners.push(fam.name);
+      keyToFamilies.set(key, owners);
+      if (!seen.has(key)) {
+        seen.add(key);
+        faces.push([lead.previewPath ?? lead.path, lead.faceIndex]);
+      }
+    }
+    if (faces.length === 0) {
+      set({ glyphMissing: {}, glyphText: text, glyphLoading: false });
+      return;
+    }
+
+    set({ glyphLoading: true });
+    try {
+      const reports = await ipc.checkGlyphs(faces, text);
+      const byKey = new Map<string, number[]>();
+      for (const r of reports) byKey.set(`${r.path}#${r.faceIndex}`, r.missing);
+      const out: Record<string, number[]> = {};
+      for (const [key, owners] of keyToFamilies) {
+        const miss = byKey.get(key);
+        if (!miss) continue;
+        for (const name of owners) out[name] = miss;
+      }
+      // 中途换了文字就丢弃这次结果，别把旧文本的结论贴到新文本上。
+      if (get().sampleText.trim() !== text) {
+        set({ glyphLoading: false });
+        return;
+      }
+      set({ glyphMissing: out, glyphText: text, glyphScope: scope, glyphLoading: false });
+    } catch {
+      set({ glyphLoading: false });
+    }
   },
   setSizeIndex: (sizeIndex) => {
     set({ sizeIndex });
@@ -1775,6 +1930,7 @@ export function selectVisibleFamilies(s: {
   search: string;
   classFilter: Classification[];
   scriptFilter: string[];
+  bookFilter: BookStyle[];
   tagFilter: string[];
   untaggedOnly: boolean;
   formatFilter: FontFormat[];
@@ -1800,6 +1956,14 @@ export function selectVisibleFamilies(s: {
   }
   if (s.scriptFilter.length > 0) {
     out = out.filter((f) => s.scriptFilter.every((sc) => f.scripts.includes(sc)));
+  }
+  // 中文书体：多选为 OR。判不出来（西文字体 / 名字里没线索的中文）的不进任何桶，
+  // 勾了「其他」才出现，否则用户会以为筛选坏了。
+  if (s.bookFilter.length > 0) {
+    out = out.filter((f) => {
+      const style = bookStyleOf(f);
+      return style !== null && s.bookFilter.includes(style);
+    });
   }
   if (s.formatFilter.length > 0) {
     out = out.filter((f) => f.formats.some((fmt) => s.formatFilter.includes(fmt as FontFormat)));
