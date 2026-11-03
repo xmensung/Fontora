@@ -1,6 +1,6 @@
 [package]
 name = "fontora"
-version = "0.10.0"
+version = "0.10.1"
 description = "Fontora — a clean font manager: preview, tag, organize, activate/deactivate and install fonts"
 authors = ["TheHolyOneZ"]
 license = "GPL-3.0-only"
@@ -13,6 +13,17 @@ default-run = "fontora"
 [lib]
 name = "fontora_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
+
+# 生产构建必须这样打：
+#   cargo build --release --features custom-protocol
+#   （或 pnpm tauri build，CLI 会自动带上）
+#
+# Tauri 2 判断“是不是 dev 构建”只看这个 feature（tauri/build.rs: dev = !custom_protocol），
+# 和 --release 无关。不带它编出来的 exe 会把 dev 标记写进二进制，运行时去连
+# devUrl（http://localhost:1420）而不是加载内嵌前端 —— 双击就是「localhost 拒绝连接」。
+# build.rs 里有一道守卫，漏了就编不过，不会再有坏包流出去。
+[features]
+custom-protocol = ["tauri/custom-protocol"]
 
 [build-dependencies]
 tauri-build = { version = "2", features = [] }

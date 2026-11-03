@@ -4,6 +4,23 @@ All notable changes to ZFontManager are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project uses
 [Semantic Versioning](https://semver.org/).
 
+## [0.10.1] — 2026-11-03
+
+### 修复
+
+- **打出来的 exe 双击只显示「localhost 拒绝连接」。** Tauri 2 判断构建是不是
+  开发模式，看的是 `custom-protocol` 这个 feature，**与 `--release` 无关**
+  （`tauri/build.rs`: `dev = !custom_protocol`）。此前直接用
+  `cargo build --release` 编，前端资源没被嵌入，二进制里带着 dev 标记，运行时
+  去连 `devUrl`（`http://localhost:1420`），而那个端口上没有开发服务器。
+
+  0.9.0 与 0.10.0 两个包都受此影响。修复方式：
+
+  - `Cargo.toml` 补 `[features] custom-protocol = ["tauri/custom-protocol"]`；
+  - `build.rs` 加守卫：`PROFILE=release` 而缺该 feature 时直接编译失败，
+    并打印正确命令，保证坏包不会再流出去；
+  - `package.json` 新增 `pnpm build:exe`，一条命令走完前端 + 生产模式编译。
+
 ## [0.10.0] — 2026-11-03
 
 ### 新增
