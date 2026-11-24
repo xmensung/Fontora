@@ -11,6 +11,7 @@
   --light-surface-soft: #f7f8fb;
   --light-hairline: rgba(21, 22, 29, 0.09);
   --light-hairline-strong: rgba(21, 22, 29, 0.14);
+  /* 卡片不带投影，这两个变量已经没有引用，留着是给以后可能的浮层备的 */
   --light-shadow-card: inset 0 1px 0 #fff, 0 1px 2px rgba(21, 22, 29, 0.05),
     0 8px 20px -8px rgba(21, 22, 29, 0.12);
   --light-shadow-card-hover: inset 0 1px 0 #fff, 0 2px 4px rgba(21, 22, 29, 0.07),
@@ -38,14 +39,20 @@
 
 :root[data-theme="light"] .titlebar,
 :root[data-theme="light"] .sidebar,
-:root[data-theme="light"] .topbar,
 :root[data-theme="light"] .list-header {
   background: rgba(255, 255, 255, 0.88);
   border-color: rgba(21, 22, 29, 0.08);
 }
 
-:root[data-theme="light"] .sidebar,
-:root[data-theme="light"] .topbar {
+/* 工具条必须是纯白、不透明、不模糊。
+   半透明白叠在 #f4f5f9 画布上会算成 #f3f4f8，顶部就多出一条灰带，
+   跟下面的白卡片接不齐。内容区同理上纯白，让工具条与卡片连成一片。 */
+:root[data-theme="light"] .topbar,
+:root[data-theme="light"] .app-content {
+  background: #ffffff;
+}
+
+:root[data-theme="light"] .sidebar {
   backdrop-filter: blur(20px) saturate(120%);
   -webkit-backdrop-filter: blur(20px) saturate(120%);
 }
@@ -116,6 +123,9 @@
 }
 
 /* ---- 4. 卡片 / 列表容器 ---------------------------------------------- */
+/* 卡片不带投影：列表是一行行铺下去的，加阴影等于给每一行描一圈灰边，
+   排列立刻变碎。只用一条发丝线分邻，整屏是平的。
+   弹层（菜单、对话框）仍保留阴影 —— 那是浮起来的，需要交代层级。 */
 :root[data-theme="light"] .family-card,
 :root[data-theme="light"] .list-wrap,
 :root[data-theme="light"] .trash-row,
@@ -123,22 +133,22 @@
 :root[data-theme="light"] .about-link {
   background: var(--light-surface);
   border-color: var(--light-hairline);
-  box-shadow: var(--light-shadow-card);
+  box-shadow: none;
 }
 
 :root[data-theme="light"] .family-card:hover,
 :root[data-theme="light"] .about-link:hover {
   border-color: rgba(21, 22, 29, 0.16);
-  box-shadow: var(--light-shadow-card-hover);
+  box-shadow: none;
 }
 
+/* 选中行：一层几乎看不出来的主色底，配合左侧 2px 竖条。
+   不用描边和投影 —— 那样一行会从列表里「浮」起来，跟扁平对不上。 */
 :root[data-theme="light"] .card-selected,
 :root[data-theme="light"] .card-selected:hover {
-  border-color: color-mix(in srgb, var(--accent-a) 62%, transparent);
-  box-shadow:
-    inset 0 1px 0 #fff,
-    0 0 0 1px color-mix(in srgb, var(--accent-a) 34%, transparent),
-    0 8px 22px -10px color-mix(in srgb, var(--accent-a) 45%, transparent);
+  background: var(--select-tint);
+  border-color: rgba(21, 22, 29, 0.09);
+  box-shadow: none;
 }
 
 :root[data-theme="light"] .card-styles,

@@ -1,6 +1,6 @@
 [package]
 name = "fontora"
-version = "0.10.2"
+version = "0.10.7"
 description = "Fontora — a clean font manager: preview, tag, organize, activate/deactivate and install fonts"
 authors = ["TheHolyOneZ"]
 license = "GPL-3.0-only"
@@ -24,6 +24,17 @@ crate-type = ["staticlib", "cdylib", "rlib"]
 # build.rs 里有一道守卫，漏了就编不过，不会再有坏包流出去。
 [features]
 custom-protocol = ["tauri/custom-protocol"]
+
+# 关于体积优化，记一笔实测结论，免得以后再走一遍：
+#
+#   lto = "thin" + strip = true      → 24,736,256 字节（比不加还大 413 KB，构建 4m25s）
+#   lto = "thin" + codegen-units = 1 → 22 分钟没编完，直接放弃
+#   不加任何 profile 配置            → 24,323,072 字节，构建 70s
+#
+# Windows 的调试符号本来就单独放在 .pdb 里，strip 去掉的那点东西还不够 LTO
+# 内联膨胀补回来的。所以这里不做 LTO。真要减体积得从依赖下手（见下）。
+[profile.release]
+opt-level = 3
 
 [build-dependencies]
 tauri-build = { version = "2", features = [] }

@@ -63,9 +63,25 @@ fn resolve(path: &str, face_index: u32, cps: &[u32]) -> HashMap<u32, bool> {
         return out;
     };
     for cp in cps {
+        // 三层都过才算「有这个字」：
+        //   1. cmap 里有这个码位（glyph_index 返回 Some）；
+        //   2. 指向的不是 .notdef（gid 0）；
+        //   3. 字形真有东西可画。有 cmap 条目、glyf/loca 里却是空字形
+        //      （起止偏移相等）的「残字体」不少，只看 1、2 的话它们会被判成
+        //      有字，界面上就是一个既不报缺字、又什么都不画的空洞。
+        //      位图和 SVG 字形本来就没有轮廓 bbox，用对应表兜住，别误杀 emoji。
         let has = char::from_u32(*cp)
             .and_then(|ch| face.glyph_index(ch))
-            .map(|g| g.0 != 0)
+            .map(|g| {
+                if g.0 == 0 {
+                    return false;
+                }
+                if face.glyph_bounding_box(g).is_some() {
+                    return true;
+                }
+                face.glyph_raster_image(g, u16::MAX).is_some()
+                    || face.glyph_svg_image(g).is_some()
+            })
             .unwrap_or(false);
         out.insert(*cp, has);
     }

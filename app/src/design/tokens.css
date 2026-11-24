@@ -20,6 +20,11 @@
   --e4: rgba(255, 255, 255, 0.12);
 
   --glass-border: rgba(255, 255, 255, 0.08);
+  /* 分隔线只有两种：普通浅灰，以及侧栏/字体列表用的主题色细线。 */
+  --line-soft: rgba(255, 255, 255, 0.07);
+  --line-accent: rgba(var(--accent-rgb), 0.5);
+  /* 选中行的极淡主色底。深色背景吃色，透明度要比浅色高一档。 */
+  --select-tint: rgba(var(--accent-rgb), 0.09);
   --glass-top-highlight: rgba(255, 255, 255, 0.1);
   --glass-top-highlight-strong: rgba(255, 255, 255, 0.16);
 
@@ -102,6 +107,10 @@
   --e4: #ffffff;
 
   --glass-border: rgba(21, 22, 29, 0.09);
+  --line-soft: rgba(21, 22, 29, 0.08);
+  --line-accent: rgba(var(--accent-rgb), 0.42);
+  /* 白底上 4.5% 已经能看出「这一行被选了」，再多就变成色块 */
+  --select-tint: rgba(var(--accent-rgb), 0.045);
   --glass-top-highlight: rgba(255, 255, 255, 0.9);
   --glass-top-highlight-strong: #ffffff;
 

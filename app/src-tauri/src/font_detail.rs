@@ -114,6 +114,116 @@ pub struct FontDetail {
     pub coverage: Coverage,
     pub cjk: cjk::CjkStats,
     pub samples: Vec<SampleLine>,
+    /// 字体所在目录里的官方样张（`预览/` 子目录优先，其次同级目录的图片）。
+    pub previews: Vec<PreviewImage>,
+}
+
+/// 一张随字体一起存放的官方样张。
+#[derive(Serialize, Deserialize, Debug, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct PreviewImage {
+    pub path: String,
+    pub name: String,
+    pub bytes: u64,
+    /// `folder` 表示来自 `预览/` 子目录，`sibling` 表示与字体文件同级。
+    pub source: String,
+}
+
+const IMAGE_EXT: [&str; 6] = ["jpg", "jpeg", "png", "webp", "gif", "bmp"];
+
+fn is_image(p: &Path) -> bool {
+    p.extension()
+        .and_then(|e| e.to_str())
+        .map(|e| IMAGE_EXT.contains(&e.to_ascii_lowercase().as_str()))
+        .unwrap_or(false)
+}
+
+/// 收集字体目录里的样张：先读 `预览/`（新规范），再补同级目录里的散图（旧习惯）。
+/// 排序按文件名里的数字自然序，`01.jpg ... 10.jpg` 才不会排成 01, 10, 02。
+pub fn collect_previews(font_path: &str) -> Vec<PreviewImage> {
+    let p = Path::new(font_path);
+    let Some(dir) = p.parent() else {
+        return Vec::new();
+    };
+
+    let mut out: Vec<PreviewImage> = Vec::new();
+    let mut seen: Vec<String> = Vec::new();
+
+    for (sub, tag) in [(Some("预览"), "folder"), (None, "sibling")] {
+        let target = match sub {
+            Some(s) => dir.join(s),
+            None => dir.to_path_buf(),
+        };
+        let Ok(entries) = std::fs::read_dir(&target) else {
+            continue;
+        };
+        let mut batch: Vec<PreviewImage> = entries
+            .filter_map(|e| e.ok())
+            .map(|e| e.path())
+            .filter(|f| f.is_file() && is_image(f))
+            .filter_map(|f| {
+                let name = f.file_name()?.to_string_lossy().into_owned();
+                let bytes = std::fs::metadata(&f).map(|m| m.len()).unwrap_or(0);
+                Some(PreviewImage {
+                    path: f.to_string_lossy().into_owned(),
+                    name,
+                    bytes,
+                    source: tag.to_string(),
+                })
+            })
+            .collect();
+        batch.sort_by(|a, b| crate::font_detail::natural_cmp(&a.name, &b.name));
+        for img in batch {
+            if seen.contains(&img.path) {
+                continue;
+            }
+            seen.push(img.path.clone());
+            out.push(img);
+        }
+    }
+
+    out.truncate(40);
+    out
+}
+
+/// 把 `Specimen 10.jpg` 排在 `Specimen 2.jpg` 之后。
+fn natural_cmp(a: &str, b: &str) -> std::cmp::Ordering {
+    let mut ai = a.chars().peekable();
+    let mut bi = b.chars().peekable();
+    loop {
+        match (ai.peek().copied(), bi.peek().copied()) {
+            (None, None) => return std::cmp::Ordering::Equal,
+            (None, Some(_)) => return std::cmp::Ordering::Less,
+            (Some(_), None) => return std::cmp::Ordering::Greater,
+            (Some(x), Some(y)) => {
+                if x.is_ascii_digit() && y.is_ascii_digit() {
+                    let mut na = String::new();
+                    while let Some(c) = ai.peek().copied().filter(|c| c.is_ascii_digit()) {
+                        na.push(c);
+                        ai.next();
+                    }
+                    let mut nb = String::new();
+                    while let Some(c) = bi.peek().copied().filter(|c| c.is_ascii_digit()) {
+                        nb.push(c);
+                        bi.next();
+                    }
+                    let va: u128 = na.parse().unwrap_or(0);
+                    let vb: u128 = nb.parse().unwrap_or(0);
+                    if va != vb {
+                        return va.cmp(&vb);
+                    }
+                } else {
+                    let lx = x.to_lowercase().to_string();
+                    let ly = y.to_lowercase().to_string();
+                    if lx != ly {
+                        return lx.cmp(&ly);
+                    }
+                    ai.next();
+                    bi.next();
+                }
+            }
+        }
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -438,9 +548,8 @@ fn build_samples(points: &[u32], han: u32) -> Vec<SampleLine> {
         // Poetic lines, longest first: the first one the font can fully set wins,
         // so a GB2312 font still gets a real Chinese sample instead of tofu.
         const ZH: &[(&str, &str, u32)] = &[
-            ("标题", "永和九年，岁在癸丑，暮春之初", 40),
-            ("正文", "落霞与孤鹜齐飞，秋水共长天一色", 26),
-            ("千字文", "天地玄黄，宇宙洪荒。日月盈昃，辰宿列张", 30),
+            ("标题", "永和九年，岁在癸丑，暮春之初，会于会稽山阴之兰亭。群贤毕至，少长咸集。", 40),
+            ("正文", "落霞与孤鹜齐飞，秋水共长天一色。", 26),
             ("标语", "设计有温度，文字有力量", 32),
         ];
         for (label, text, size) in ZH {
@@ -468,19 +577,28 @@ fn build_samples(points: &[u32], han: u32) -> Vec<SampleLine> {
                 });
             }
         } else {
-            // Plus a 常用字 strip so coverage is visible at a glance.
-            let common = list_chars("changyong3500").unwrap_or("");
-            let picked: String = common
-                .chars()
-                .filter(|c| points.binary_search(&(*c as u32)).is_ok())
-                .take(28)
-                .collect();
-            if !picked.is_empty() {
+            // 固定的短句用来比较字形风格；字体盖不全时才退回它确实拥有的常用字。
+            const COMMON_SAMPLE: &str = "竹外桃花三两枝，春江水暖鸭先知。";
+            if covers_all(points, COMMON_SAMPLE) {
                 out.push(SampleLine {
                     label: "常用字".to_string(),
-                    text: picked,
+                    text: COMMON_SAMPLE.to_string(),
                     size: 24,
                 });
+            } else {
+                let common = list_chars("changyong3500").unwrap_or("");
+                let picked: String = common
+                    .chars()
+                    .filter(|c| points.binary_search(&(*c as u32)).is_ok())
+                    .take(28)
+                    .collect();
+                if !picked.is_empty() {
+                    out.push(SampleLine {
+                        label: "常用字".to_string(),
+                        text: picked,
+                        size: 24,
+                    });
+                }
             }
         }
     }
@@ -749,6 +867,7 @@ pub fn build(path: &str, face_index: u32) -> Result<FontDetail, String> {
         coverage,
         cjk: cjk_stats,
         samples,
+        previews: collect_previews(path),
     })
 }
 
@@ -759,6 +878,29 @@ mod tests {
     fn font(rel: &str) -> Option<String> {
         let p = format!("C://Windows//Fonts//{rel}");
         std::path::Path::new(&p).exists().then_some(p)
+    }
+
+    /// 样张读取：`预览/` 排在前面，文件名的数字按自然序排（02 在 10 前）。
+    #[test]
+    fn collects_previews_from_folder() {
+        let dir = std::env::temp_dir().join("fontora-preview-test");
+        let sub = dir.join("预览");
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&sub).unwrap();
+        std::fs::write(dir.join("Demo-Regular.ttf"), b"x").unwrap();
+        for n in ["10.jpg", "02.jpg", "01.png"] {
+            std::fs::write(sub.join(n), b"x").unwrap();
+        }
+        std::fs::write(dir.join("sibling.jpg"), b"x").unwrap();
+        std::fs::write(dir.join("readme.txt"), b"x").unwrap();
+
+        let list = collect_previews(dir.join("Demo-Regular.ttf").to_str().unwrap());
+        let names: Vec<&str> = list.iter().map(|p| p.name.as_str()).collect();
+        println!("previews={names:?}");
+        assert_eq!(names, vec!["01.png", "02.jpg", "10.jpg", "sibling.jpg"]);
+        assert_eq!(list[0].source, "folder");
+        assert_eq!(list[3].source, "sibling");
+        let _ = std::fs::remove_dir_all(&dir);
     }
 
     #[test]

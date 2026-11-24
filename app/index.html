@@ -11,10 +11,74 @@
       // 首帧前定主题，避免默认深色闪一下再变浅。
       document.documentElement.dataset.theme = "light";
     </script>
+    <style>
+      /* 启动画面。窗口一显示就能看到它，一直待到 React 挂载（React 会接管
+         #root 并清掉这些节点）。它不是装饰：冷启动时 WebView2 要几秒才画完
+         第一帧，这段时间如果留白，看起来就像程序卡死了。 */
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        background: #f4f5f9;
+      }
+      .boot {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 20px;
+        background: #f4f5f9;
+      }
+      .boot-name {
+        font-family: Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
+        font-size: 15px;
+        font-weight: 500;
+        letter-spacing: 0.22em;
+        color: #15161d;
+        opacity: 0.5;
+      }
+      .boot-line {
+        width: 132px;
+        height: 2px;
+        border-radius: 1px;
+        background: rgba(21, 22, 29, 0.08);
+        overflow: hidden;
+      }
+      .boot-line i {
+        display: block;
+        width: 42%;
+        height: 100%;
+        border-radius: 1px;
+        background: #b04a72;
+        animation: boot-slide 1.15s ease-in-out infinite;
+      }
+      @keyframes boot-slide {
+        0% {
+          transform: translateX(-110%);
+        }
+        100% {
+          transform: translateX(320%);
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .boot-line i {
+          animation: none;
+          width: 100%;
+          opacity: 0.5;
+        }
+      }
+    </style>
   </head>
 
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <div class="boot">
+        <div class="boot-name">FONTORA</div>
+        <div class="boot-line"><i></i></div>
+      </div>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

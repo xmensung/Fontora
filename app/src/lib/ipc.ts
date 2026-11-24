@@ -242,6 +242,16 @@ export interface FontDetail {
   coverage: Coverage;
   cjk: CjkStats;
   samples: SampleLine[];
+  /** 字体目录里的官方样张：`预览/` 子目录优先，其次同级图片。 */
+  previews: PreviewImage[];
+}
+
+/** 一张随字体一起存放的官方样张。 */
+export interface PreviewImage {
+  path: string;
+  name: string;
+  bytes: number;
+  source: "folder" | "sibling";
 }
 
 /** 一次「导出字体」的结果（拆包 / 改名 / 子集化共用）。 */

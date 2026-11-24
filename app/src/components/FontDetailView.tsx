@@ -1,3 +1,4 @@
+import { convertFileSrc } from "@tauri-apps/api/core";
 import { openUrl, revealItemInDir } from "@tauri-apps/plugin-opener";
 import { AnimatePresence, motion } from "motion/react";
 import { ArrowLeft, Check, Copy, Download, ExternalLink, FolderOpen, Grid3x3, LoaderCircle, Minus, Package, Plus, Sparkles, Star, Stethoscope, Tag, X } from "lucide-react";
@@ -9,10 +10,10 @@ import { PillToggle } from "../design/primitives/PillToggle";
 import { spring } from "../design/springs";
 import { toast } from "../design/primitives/Toast";
 import { playStar } from "../lib/sound";
-import { useFontCss, formatBytes, pathBasename } from "../lib/fontLoader";
-import { ipc, type CoverageRow, type FontDetail, type FontFace } from "../lib/ipc";
+import { useFontCss, useInkOk, formatBytes, pathBasename } from "../lib/fontLoader";
+import { ipc, type CoverageRow, type FontDetail } from "../lib/ipc";
 import { useFocusTrap } from "../lib/useFocusTrap";
-import { useT, type TKey } from "../lib/i18n";
+import { useT } from "../lib/i18n";
 import { familiesFor, useFontStore } from "../state/fontStore";
 import { GlyphText, useMissing } from "./GlyphText";
 import { TagPicker } from "./TagPicker";
@@ -442,7 +443,7 @@ function CoverageSection({ detail }: { detail: FontDetail }) {
       <p className="fd-section-note">{t("fontDetail.coverageNote")}</p>
 
       <div className="fd-cov-columns">
-        <div className="fd-cov-col">
+        <div className="fd-cov-groups">
           <div className="fd-col-head">{t("fontDetail.listed")}</div>
           {GROUPS.map((g) => {
             const rows = listed.get(g.key) ?? [];
@@ -457,7 +458,7 @@ function CoverageSection({ detail }: { detail: FontDetail }) {
             );
           })}
         </div>
-        <div className="fd-cov-col">
+        <div className="fd-cov-groups">
           <div className="fd-col-head">{t("fontDetail.blocks")}</div>
           <div className="fd-cov-group">
             {detail.coverage.blocks.map((row) => (
@@ -466,6 +467,86 @@ function CoverageSection({ detail }: { detail: FontDetail }) {
           </div>
         </div>
       </div>
+    </section>
+  );
+}
+
+function PreviewsSection({ detail }: { detail: FontDetail }) {
+  const t = useT();
+  const images = detail.previews ?? [];
+  const [open, setOpen] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (open === null) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(null);
+      if (e.key === "ArrowRight") setOpen((i) => (i === null ? i : (i + 1) % images.length));
+      if (e.key === "ArrowLeft")
+        setOpen((i) => (i === null ? i : (i - 1 + images.length) % images.length));
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open, images.length]);
+
+  if (!images.length) return null;
+
+  return (
+    <section className="fd-section">
+      <header className="fd-section-head">
+        <span className="fd-section-index tabular">05</span>
+        <h2>{t("fontDetail.section.previews")}</h2>
+        <span className="fd-section-rule" aria-hidden="true" />
+        <span className="fd-preview-count tabular">
+          {t("fontDetail.previewsCount", { count: images.length })}
+        </span>
+      </header>
+
+      <div className="fd-previews">
+        {images.map((img, i) => (
+          <button
+            key={img.path}
+            className="fd-preview"
+            onClick={() => setOpen(i)}
+            title={`${img.name}（${formatBytes(img.bytes)}）`}
+          >
+            <img src={convertFileSrc(img.path)} alt={img.name} loading="lazy" />
+            <span className="fd-preview-name">{img.name}</span>
+          </button>
+        ))}
+      </div>
+
+      <AnimatePresence>
+        {open !== null && images[open] && (
+          <motion.div
+            className="fd-preview-veil"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.16 }}
+            onClick={() => setOpen(null)}
+          >
+            <motion.figure
+              className="fd-preview-stage"
+              initial={{ opacity: 0, scale: 0.97 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.98 }}
+              transition={spring}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <img src={convertFileSrc(images[open].path)} alt={images[open].name} />
+              <figcaption>
+                <span className="fd-preview-caption-name">{images[open].name}</span>
+                <span className="tabular">
+                  {(open + 1).toString()} / {images.length.toString()}
+                </span>
+                <button className="fd-preview-close" onClick={() => setOpen(null)}>
+                  <X size={14} strokeWidth={1.8} />
+                </button>
+              </figcaption>
+            </motion.figure>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </section>
   );
 }
@@ -482,7 +563,7 @@ function SamplesSection({ detail }: { detail: FontDetail }) {
   const missing = useMissing(familyName ?? "");
 
   const [styleId, setStyleId] = useState<string | null>(null);
-  const [scale, setScale] = useState(1);
+  const [scale, setScale] = useState(1.5);
 
   const lead =
     family?.faces.find((f) => f.id === styleId) ??
@@ -490,6 +571,21 @@ function SamplesSection({ detail }: { detail: FontDetail }) {
     family?.faces[0] ??
     null;
   const { fontFamily } = useFontCss(lead);
+  // 切字重时，新字面在内存里还没解好，useFontCss 会先返回 null。若此时把
+  // font-family 摘掉，几十毫秒里文字是用界面字体排的——行宽、行数都不一样，
+  // 页面就往上或往下跳一下，等字面到位再跳回来。留一份「上一款已经加载好的
+  // 字面」顶住版面，新的到位再换，视线里就没有这一下了。
+  const [paintFamily, setPaintFamily] = useState<string | null>(null);
+  // 换到别的字体时才清空，切字重时留着上一款兜底 —— 两者的区别就在这
+  useEffect(() => {
+    setPaintFamily(null);
+  }, [familyName]);
+  useEffect(() => {
+    if (fontFamily) setPaintFamily(fontFamily);
+  }, [fontFamily]);
+  // 示例句在这款字体里全是空字形（日文毛笔一类）时，改用字体名，别给一行白板。
+  const inkOk = useInkOk(paintFamily, sampleText);
+  const customText = inkOk ? sampleText : (familyName ?? sampleText);
 
   const faceStyle = lead?.italic ? "italic" : "normal";
 
@@ -517,8 +613,8 @@ function SamplesSection({ detail }: { detail: FontDetail }) {
             <span>{t("fontDetail.size")}</span>
             <input
               type="range"
-              min={70}
-              max={160}
+              min={50}
+              max={500}
               value={Math.round(scale * 100)}
               onChange={(e) => setScale(Number(e.target.value) / 100)}
             />
@@ -527,16 +623,17 @@ function SamplesSection({ detail }: { detail: FontDetail }) {
         </div>
       </header>
 
-      {!fontFamily && (
+      {!paintFamily && (
         <p className="fd-section-note">{t("fontDetail.sampleLoading")}</p>
       )}
 
-      <div className="fd-samples" style={{ fontFamily: fontFamily ?? undefined, fontStyle: faceStyle }}>
+      <div className="fd-samples" style={{ fontFamily: paintFamily ?? undefined, fontStyle: faceStyle }}>
         {sampleText.trim() && (
           <div className="fd-sample">
             <div className="fd-sample-label">
               {t("fontDetail.customText")}
-              {missing && missing.size > 0 && (
+              {!inkOk && <span className="fd-sample-missing">{t("card.namePreview")}</span>}
+              {inkOk && missing && missing.size > 0 && (
                 <span className="fd-sample-missing">
                   {t("card.missing", { count: missing.size })}
                 </span>
@@ -547,6 +644,8 @@ function SamplesSection({ detail }: { detail: FontDetail }) {
               style={{
                 fontSize: 30 * scale,
                 lineHeight,
+                // 至少占住一行的高度：换字面、换缺字标记时不会瞬间塌成 0 再把下面顶开
+                minHeight: Math.round(30 * scale * lineHeight),
                 ...(vertical
                   ? {
                       writingMode: "vertical-rl" as const,
@@ -556,7 +655,7 @@ function SamplesSection({ detail }: { detail: FontDetail }) {
                   : {}),
               }}
             >
-              <GlyphText text={sampleText} missing={missing} />
+              {inkOk ? <GlyphText text={sampleText} missing={missing} /> : customText}
             </div>
           </div>
         )}
@@ -570,6 +669,7 @@ function SamplesSection({ detail }: { detail: FontDetail }) {
               style={{
                 fontSize: s.size * scale,
                 lineHeight,
+                minHeight: Math.round(s.size * scale * lineHeight),
                 ...(vertical
                   ? {
                       writingMode: "vertical-rl" as const,
@@ -584,107 +684,6 @@ function SamplesSection({ detail }: { detail: FontDetail }) {
           </div>
         ))}
       </div>
-    </section>
-  );
-}
-
-/** 打开「排版特性」时先摆出来的那些。 */
-const FEATURE_PRIORITY = [
-  "liga",
-  "dlig",
-  "calt",
-  "kern",
-  "smcp",
-  "c2sc",
-  "onum",
-  "lnum",
-  "tnum",
-  "pnum",
-  "frac",
-  "ordn",
-  "sups",
-  "subs",
-  "zero",
-  "salt",
-  "swsh",
-  "titl",
-  "hist",
-];
-
-function FeaturesSection({ detail, lead }: { detail: FontDetail; lead: FontFace | null }) {  const t = useT();
-  const [on, setOn] = useState<string[]>([]);
-  const { fontFamily } = useFontCss(lead);
-  const sample = t("fontDetail.featuresSample");
-  // 一款中文字体的特性表动辄一两百个标签，全铺出来只是噪音。
-  // 常用的排版特性排前面，其余按原顺序截断。
-  const feats = useMemo(() => {
-    const all = detail.features;
-    const head = FEATURE_PRIORITY.filter((tag) => all.includes(tag));
-    const rest = all.filter((tag) => !FEATURE_PRIORITY.includes(tag));
-    return [...head, ...rest].slice(0, 48);
-  }, [detail.features]);
-
-  // 关掉特性时的 CSS 值：`"liga" 0` 才是真关，留空等于没写，浏览器会用默认值。
-  const settings = on.length
-    ? on.map((tag) => `"${tag}" 1`).join(", ")
-    : `"liga" 0, "kern" 0`;
-
-  return (
-    <section className="fd-section">
-      <header className="fd-section-head">
-        <span className="fd-section-index tabular">05</span>
-        <h2>{t("fontDetail.section.features")}</h2>
-        <span className="fd-section-rule" aria-hidden="true" />
-        {feats.length > 0 && (
-          <div className="fd-feat-tools">
-            {on.length > 0 && (
-              <span className="fd-feat-count tabular">
-                {t("fontDetail.featuresOn", { count: on.length })}
-              </span>
-            )}
-            {on.length > 0 && (
-              <button className="fd-feat-reset" onClick={() => setOn([])}>
-                {t("fontDetail.featuresReset")}
-              </button>
-            )}
-          </div>
-        )}
-      </header>
-
-      {feats.length === 0 ? (
-        <p className="fd-section-note">{t("fontDetail.featuresNone")}</p>
-      ) : (
-        <>
-          <p className="fd-section-note">{t("fontDetail.featuresNote")}</p>
-          <div className="fd-feats">
-            {feats.map((tag) => {
-              const key = `feat.${tag}`;
-              const label = t(key as TKey);
-              const isOn = on.includes(tag);
-              return (
-                <button
-                  key={tag}
-                  className={`fd-feat ${isOn ? "on" : ""}`}
-                  aria-pressed={isOn}
-                  title={tag}
-                  onClick={() =>
-                    setOn((cur) => (cur.includes(tag) ? cur.filter((x) => x !== tag) : [...cur, tag]))
-                  }
-                >
-                  <span className="fd-feat-name">{label === key ? tag : label}</span>
-                  <span className="fd-feat-tag fd-mono">{tag}</span>
-                </button>
-              );
-            })}
-          </div>
-          <div
-            className="fd-feat-sample"
-            style={{ fontFamily: fontFamily ?? undefined, fontFeatureSettings: settings }}
-          >
-            {sample}
-          </div>
-        </>
-      )}
     </section>
   );
 }
@@ -956,7 +955,7 @@ export function FontDetailView() {
                     <LicenseSection key="license" detail={detail} />,
                     <CoverageSection key="coverage" detail={detail} />,
                     <SamplesSection key="samples" detail={detail} />,
-                    <FeaturesSection key="features" detail={detail} lead={lead} />,
+                    <PreviewsSection key="previews" detail={detail} />,
                   ].map((section, i) => (
                     <motion.div
                       key={i}

@@ -1,4 +1,3 @@
-import { getCurrentWindow } from "@tauri-apps/api/window";
 import { MotionConfig, motion } from "motion/react";
 import { CheckCircle2, CircleDashed, Clock, FolderOpen, SearchX, Star, Tag as TagIcon, Type } from "lucide-react";
 import { useEffect, useMemo } from "react";
@@ -114,6 +113,9 @@ function MainContent() {
   const classFilter = useFontStore((s) => s.classFilter);
   const scriptFilter = useFontStore((s) => s.scriptFilter);
   const bookFilter = useFontStore((s) => s.bookFilter);
+  const rangeFilter = useFontStore((s) => s.rangeFilter);
+  const multiStyleOnly = useFontStore((s) => s.multiStyleOnly);
+  const bigCharsetOnly = useFontStore((s) => s.bigCharsetOnly);
   const tagFilter = useFontStore((s) => s.tagFilter);
   const untaggedOnly = useFontStore((s) => s.untaggedOnly);
   const variableOnly = useFontStore((s) => s.variableOnly);
@@ -135,9 +137,10 @@ function MainContent() {
       selectVisibleFamilies({
         fonts, tags, collections, favorites, sessionActivated, notes, search,
         classFilter, scriptFilter, bookFilter, tagFilter, untaggedOnly, formatFilter, featureFilter, installFilter, charFilter, charMatches,
+        rangeFilter, multiStyleOnly, bigCharsetOnly,
         variableOnly, toggleableOnly, nav, sort, usage, ratings, aliases, pinyinKeys, ratingFilter,
       }),
-    [fonts, tags, collections, favorites, sessionActivated, notes, search, classFilter, scriptFilter, bookFilter, tagFilter, untaggedOnly, formatFilter, featureFilter, installFilter, charFilter, charMatches, variableOnly, toggleableOnly, nav, sort, usage, ratings, aliases, pinyinKeys, ratingFilter],
+    [fonts, tags, collections, favorites, sessionActivated, notes, search, classFilter, scriptFilter, bookFilter, tagFilter, untaggedOnly, formatFilter, featureFilter, installFilter, charFilter, charMatches, rangeFilter, multiStyleOnly, bigCharsetOnly, variableOnly, toggleableOnly, nav, sort, usage, ratings, aliases, pinyinKeys, ratingFilter],
   );
 
   // 缺字筛选放在最后一道：缺字表是按「筛选后、缺字筛选前」的那批字体算的，
@@ -208,9 +211,9 @@ export default function App() {
   const motionPref = useFontStore((s) => s.motionPref);
 
   useEffect(() => {
-    void init().then(() => {
-      if (!useFontStore.getState().startMinimized) void getCurrentWindow().show();
-    });
+    // 窗口显不显示由 init 里读完偏好那一刻决定（那里还知道 startMinimized），
+    // 这里只保证初始化失败不会变成一个没人处理的 rejection。
+    void init().catch((e) => console.error("init failed", e));
   }, [init]);
 
   useEffect(() => {

@@ -1,9 +1,9 @@
 import { AnimatePresence, motion } from "motion/react";
 import { AlertTriangle, ChevronRight, Lock, Star } from "lucide-react";
-import { memo, useState } from "react";
+import { memo, useMemo, useState } from "react";
 import { PillToggle } from "../design/primitives/PillToggle";
 import { spring, springSnappy, springSoft, staggerDelay } from "../design/springs";
-import { useFontCss } from "../lib/fontLoader";
+import { useBlankGaps, useFontCss, useInkOk } from "../lib/fontLoader";
 import { buildFamilyMenu } from "../lib/menus";
 import { openContextMenu } from "../design/primitives/ContextMenu";
 import { activeConflictsFor, conflictsFor, SIZES, useFontStore, type Family } from "../state/fontStore";
@@ -21,18 +21,24 @@ export function FormatBadge({ format, isVariable }: { format: string; isVariable
 function FacePreview({
   face,
   text,
+  fallback,
   size,
   index,
   synthesize,
 }: {
   face: FontFace;
   text: string;
+  fallback: string;
   size: number;
   index: number;
   synthesize: boolean;
 }) {
   const t = useT();
   const { fontFamily, failed } = useFontCss(face);
+  const inkOk = useInkOk(fontFamily, text);
+  const toName = Boolean(fontFamily) && !inkOk;
+  const nameInk = useInkOk(fontFamily, toName ? fallback : "");
+  const shown = toName ? (nameInk ? fallback : null) : text;
   return (
     <motion.div
       className="face-row"
@@ -42,7 +48,7 @@ function FacePreview({
     >
       <span className="face-style">{face.style}</span>
       <AnimatePresence mode="wait">
-        {fontFamily ? (
+        {fontFamily && shown ? (
           <motion.span
             key="real"
             className="face-sample"
@@ -57,8 +63,12 @@ function FacePreview({
             animate={{ opacity: 1, y: 0 }}
             transition={spring}
           >
-            {text}
+            {shown}
           </motion.span>
+        ) : fontFamily ? (
+          <span key="blank" className="face-sample face-failed">
+            {t("card.blankGlyphs")}
+          </span>
         ) : failed ? (
           <span key="failed" className="face-sample face-failed">
             {t("card.previewUnavailable")}
@@ -96,6 +106,29 @@ export const FamilyCard = memo(function FamilyCard({ family }: { family: Family 
   const lead = family.faces.find((f) => f.style === "Regular") ?? family.faces[0];
   const { fontFamily, failed } = useFontCss(lead);
   const text = sampleText.trim() || family.name;
+  // 有些字体把英文码位挂成空字形（日文毛笔一类），照原样画就是一整块白。
+  // 先实画一遍，没有墨就改用字体名 —— 名字里的字它们基本都有。
+  const inkOk = useInkOk(fontFamily, text);
+
+  // 整句有墨不代表每个字都有墨：日文毛笔体常常一半正常、一半空字形，
+  // 照原样画就是「粗细极不均匀」。逐字挑出空的那几个，一并算进缺字。
+  // 只在已知有缺字时才扫 —— 正常字体（覆盖率完整）没必要为一个字跑一遍画布。
+  const shouldScan = Boolean(missing && missing.size > 0);
+  const gaps = useBlankGaps(fontFamily, fontFamily && shouldScan ? text : "");
+  const missingAll = useMemo(() => {
+    if (!gaps.size) return missing;
+    const set = new Set(missing ?? []);
+    for (const cp of gaps) set.add(cp);
+    return set;
+  }, [missing, gaps]);
+
+  // 缺字太多就别硬排版了 —— 一行里大半是补的，读起来只剩噪点。
+  // 四成以上的字没有字形（白舟那种日文毛笔体常到七成），直接拿字体名当样张。
+  const uniqueChars = useMemo(() => new Set(Array.from(text)).size, [text]);
+  const missRatio = missingAll ? missingAll.size / Math.max(1, uniqueChars) : 0;
+  const toName = Boolean(fontFamily) && (!inkOk || missRatio >= 0.4);
+  const nameInk = useInkOk(fontFamily, toName ? family.name : "");
+  const shown = toName ? (nameInk ? family.name : null) : text;
 
   return (
     <motion.article
@@ -125,12 +158,6 @@ export const FamilyCard = memo(function FamilyCard({ family }: { family: Family 
         st.openFontDetail(family.name);
       }}
       onContextMenu={(e) => openContextMenu(e, buildFamilyMenu(family))}
-
-      animate={{ scale: family.active ? 1 : 0.99 }}
-      whileHover={{ y: -1 }}
-      whileTap={{ scale: family.active ? 0.99 : 0.98 }}
-      transition={spring}
-      layout="position"
     >
       <header className="card-head">
         <FormatBadge format={family.formats[0]} isVariable={family.isVariable} />
@@ -220,12 +247,12 @@ export const FamilyCard = memo(function FamilyCard({ family }: { family: Family 
       <div
         className={`card-preview ${vertical ? "preview-vertical" : ""}`}
         style={{
-          minHeight: vertical ? undefined : size * 1.35,
+          minHeight: vertical ? undefined : size * 1.2,
           height: vertical ? Math.min(size * 3.4, 250) : undefined,
         }}
       >
         <AnimatePresence mode="wait">
-          {fontFamily ? (
+          {fontFamily && shown ? (
             <motion.p
               key="real"
               className="preview-text"
@@ -246,8 +273,12 @@ export const FamilyCard = memo(function FamilyCard({ family }: { family: Family 
               animate={{ opacity: 1, y: 0 }}
               transition={spring}
             >
-              <GlyphText text={text} missing={missing} />
+              {toName ? shown : <GlyphText text={text} missing={missingAll} />}
             </motion.p>
+          ) : fontFamily ? (
+            <p key="blank" className="preview-text preview-failed">
+              {t("card.blankGlyphs")}
+            </p>
           ) : failed ? (
             <p key="failed" className="preview-text preview-failed">
               {t("card.noPreview")}
@@ -263,12 +294,21 @@ export const FamilyCard = memo(function FamilyCard({ family }: { family: Family 
         </AnimatePresence>
       </div>
 
-      {missing && missing.size > 0 && (
+      {toName && (
+        <span className="card-missing card-hint" title={t("card.namePreviewTitle")}>
+          {t("card.namePreview")}
+          {missingAll && missingAll.size > 0 && (
+            <span className="tabular"> · {t("card.missing", { count: missingAll.size })}</span>
+          )}
+        </span>
+      )}
+
+      {!toName && missingAll && missingAll.size > 0 && (
         <span
           className="card-missing"
-          title={t("card.missingTitle", { chars: missingLabel(missing) })}
+          title={t("card.missingTitle", { chars: missingLabel(missingAll) })}
         >
-          {t("card.missing", { count: missing.size })}
+          {t("card.missing", { count: missingAll.size })}
         </span>
       )}
 
@@ -286,6 +326,7 @@ export const FamilyCard = memo(function FamilyCard({ family }: { family: Family 
                 key={face.id}
                 face={face}
                 text={text}
+                fallback={family.name}
                 size={size}
                 index={i}
                 synthesize={family.faces.filter((f) => f.path === face.path).length > 1}

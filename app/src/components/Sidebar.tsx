@@ -1,12 +1,13 @@
 import { motion } from "motion/react";
-import { BarChart3, CheckCircle2, ChevronDown, CircleDashed, Clock, FolderCog, FolderOpen, FolderSearch, FolderTree, HardDriveDownload, Info, Keyboard, Library, Plus, Sparkles, Star, Tag, Trash2, Layers } from "lucide-react";
+import { CheckCircle2, ChevronDown, CircleDashed, Clock, FolderCog, FolderOpen, Keyboard, Library, MoreHorizontal, Plus, Sparkles, Star, Tag, Trash2 } from "lucide-react";
 import { open as openDialog } from "@tauri-apps/plugin-dialog";
 import { readTextFile } from "@tauri-apps/plugin-fs";
 import { toast } from "../design/primitives/Toast";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { openContextMenu } from "../design/primitives/ContextMenu";
 import { spring, springSoft, staggerDelay } from "../design/springs";
 import { allTags, familiesFor, useFontStore, type Family, type Nav } from "../state/fontStore";
+import { BOOK_STYLES, bookStyleOf, isChinese, type BookStyle } from "../lib/bookStyle";
 import { exportFontList } from "../lib/menus";
 import { t as translate, useT } from "../lib/i18n";
 import { TAG_GROUPS, groupIdOfTag } from "../lib/tagTaxonomy";
@@ -53,6 +54,63 @@ function NavRow({
       <span className="nav-label">{label}</span>
       {count !== undefined && <span className="nav-count tabular">{count}</span>}
     </motion.button>
+  );
+}
+
+/**
+ * 筛选行：没有图标，比导航行矮一档 —— 视觉上自动退到第二层，
+ * 一眼能分清「去哪看」和「筛什么」。
+ */
+function FilterRow({
+  label,
+  count,
+  on,
+  onClick,
+  disabled,
+}: {
+  label: string;
+  count: number;
+  on: boolean;
+  onClick: () => void;
+  disabled?: boolean;
+}) {
+  return (
+    <button
+      className={`side-filter ${on ? "side-filter-on" : ""}`}
+      onClick={onClick}
+      disabled={disabled}
+      aria-pressed={on}
+    >
+      <span className="side-filter-label">{label}</span>
+      <span className="side-filter-count tabular">{count}</span>
+    </button>
+  );
+}
+
+/** 书体 / 特征用两列方块，比一行一条省一半高度。 */
+function FilterChip({
+  label,
+  count,
+  on,
+  onClick,
+  disabled,
+}: {
+  label: string;
+  count: number;
+  on: boolean;
+  onClick: () => void;
+  disabled?: boolean;
+}) {
+  return (
+    <button
+      className={`side-chip ${on ? "side-chip-on" : ""}`}
+      onClick={onClick}
+      disabled={disabled}
+      aria-pressed={on}
+    >
+      <span className="side-chip-label">{label}</span>
+      <span className="side-chip-count tabular">{count}</span>
+    </button>
   );
 }
 
@@ -140,6 +198,17 @@ export function Sidebar() {
   const renameCollection = useFontStore((s) => s.renameCollection);
   const setFamilyTags = useFontStore((s) => s.setFamilyTags);
   const pendingCollectionFor = useFontStore((s) => s.pendingCollectionFor);
+  const sessionActivated = useFontStore((s) => s.sessionActivated);
+  const bookFilter = useFontStore((s) => s.bookFilter);
+  const toggleBookFilter = useFontStore((s) => s.toggleBookFilter);
+  const rangeFilter = useFontStore((s) => s.rangeFilter);
+  const setRangeFilter = useFontStore((s) => s.setRangeFilter);
+  const variableOnly = useFontStore((s) => s.variableOnly);
+  const multiStyleOnly = useFontStore((s) => s.multiStyleOnly);
+  const bigCharsetOnly = useFontStore((s) => s.bigCharsetOnly);
+  const classFilter = useFontStore((s) => s.classFilter);
+  const toggleSidebarAttribute = useFontStore((s) => s.toggleSidebarAttribute);
+  const setNav = useFontStore((s) => s.setNav);
 
   const [creating, setCreating] = useState(false);
   const [renaming, setRenaming] = useState<string | null>(null);
@@ -148,16 +217,68 @@ export function Sidebar() {
     if (pendingCollectionFor) setCreating(true);
   }, [pendingCollectionFor]);
 
-  const familyCount = familiesFor(fonts, tags).size;
-  const sessionActivated = useFontStore((s) => s.sessionActivated);
-  const allFamilies = [...familiesFor(fonts, tags).values()];
-  const installedCount = allFamilies.filter(
-    (f) => f.active && !sessionActivated.includes(f.name),
-  ).length;
-  const sessionCount = allFamilies.filter((f) =>
-    sessionActivated.includes(f.name),
-  ).length;
-  const notInstalledCount = allFamilies.filter((f) => !f.active).length;
+  // 字体库上万条时，每次渲染重建家族表会明显掉帧 —— 算一次，只跟着 fonts/tags 变。
+  const familyList = useMemo(() => [...familiesFor(fonts, tags).values()], [fonts, tags]);
+  const sessionSet = useMemo(() => new Set(sessionActivated), [sessionActivated]);
+
+  const stats = useMemo(() => {
+    const book: Partial<Record<BookStyle, number>> = {};
+    let installed = 0;
+    let notInstalled = 0;
+    let inSession = 0;
+    let cjk = 0;
+    let variable = 0;
+    let multiStyle = 0;
+    let mono = 0;
+    let big = 0;
+    for (const f of familyList) {
+      const session = sessionSet.has(f.name);
+      if (session) inSession++;
+      if (f.active && !session) installed++;
+      if (!f.active) notInstalled++;
+      if (isChinese(f)) cjk++;
+      const style = bookStyleOf(f);
+      if (style) book[style] = (book[style] ?? 0) + 1;
+      if (f.isVariable) variable++;
+      if (f.faces.length > 1) multiStyle++;
+      if (f.classification === "mono") mono++;
+      if (f.faces.some((x) => x.glyphCount >= 20000)) big++;
+    }
+    return {
+      installed,
+      notInstalled,
+      inSession,
+      cjk,
+      latin: familyList.length - cjk,
+      book,
+      variable,
+      multiStyle,
+      mono,
+      big,
+    };
+  }, [familyList, sessionSet]);
+
+  const monospaceOn = classFilter.includes("mono");
+
+  const activeFilters =
+    (rangeFilter !== "all" ? 1 : 0) +
+    bookFilter.length +
+    (variableOnly ? 1 : 0) +
+    (multiStyleOnly ? 1 : 0) +
+    (monospaceOn ? 1 : 0) +
+    (bigCharsetOnly ? 1 : 0);
+
+  const clearFilters = () => {
+    useFontStore.setState({
+      rangeFilter: "all",
+      bookFilter: [],
+      variableOnly: false,
+      multiStyleOnly: false,
+      bigCharsetOnly: false,
+      classFilter: classFilter.filter((c) => c !== "mono"),
+    });
+  };
+
   const tagCounts = allTags(tags);
   const collapsed = useFontStore((s) => s.collapsedSections);
   const toggleSection = useFontStore((s) => s.toggleSection);
@@ -210,6 +331,22 @@ export function Sidebar() {
     }
   };
 
+  const openToolsMenu = (e: React.MouseEvent) => {
+    openContextMenu(e, [
+      { label: translate("side.usage"), action: () => setNav({ kind: "usage" }) },
+      { label: translate("side.duplicates"), action: () => setNav({ kind: "duplicates" }) },
+      { label: translate("side.references"), action: () => setNav({ kind: "references" }) },
+      { label: translate("side.organize"), action: () => setNav({ kind: "organize" }) },
+      { label: translate("side.backup"), action: () => setNav({ kind: "backup" }) },
+      { kind: "separator" },
+      { label: translate("side.about"), action: () => setNav({ kind: "about" }) },
+      {
+        label: translate("side.shortcuts"),
+        action: () => useFontStore.getState().setHelpOpen(true),
+      },
+    ]);
+  };
+
   let i = 0;
   return (
     <motion.aside
@@ -219,6 +356,17 @@ export function Sidebar() {
       transition={springSoft}
     >
       <div className="sidebar-scroll">
+        {activeFilters > 0 && (
+          <div className="side-clearbar">
+            <span className="side-clearbar-text">
+              {t("side.filtersActive", { count: activeFilters })}
+            </span>
+            <button className="side-clearbar-btn" onClick={clearFilters}>
+              {t("side.clearFilters")}
+            </button>
+          </div>
+        )}
+
         <div className={`sidebar-section ${collapsed.includes("browse") ? "sidebar-collapsed" : ""}`}>
           <div className="sidebar-heading sidebar-heading-row">
             <button
@@ -237,22 +385,22 @@ export function Sidebar() {
           <NavRow
             nav={{ kind: "library" }}
             icon={<Library size={15} strokeWidth={1.5} />}
-            label={t("side.library")}
-            count={familyCount}
+            label={t("side.allFonts")}
+            count={familyList.length}
             index={i++}
           />
           <NavRow
             nav={{ kind: "installed" }}
             icon={<CheckCircle2 size={15} strokeWidth={1.5} />}
             label={t("side.installed")}
-            count={installedCount}
+            count={stats.installed}
             index={i++}
           />
           <NavRow
             nav={{ kind: "notInstalled" }}
             icon={<CircleDashed size={15} strokeWidth={1.5} />}
             label={t("side.notInstalled")}
-            count={notInstalledCount}
+            count={stats.notInstalled}
             index={i++}
           />
           <NavRow
@@ -262,16 +410,119 @@ export function Sidebar() {
             count={favorites.length}
             index={i++}
           />
-          {sessionCount > 0 && (
+          {stats.inSession > 0 && (
             <NavRow
               nav={{ kind: "activatedSession" }}
               icon={<Clock size={15} strokeWidth={1.5} />}
               label={t("side.activatedUntilClose")}
-              count={sessionCount}
+              count={stats.inSession}
               index={i++}
             />
           )}
           </>
+          )}
+        </div>
+
+        <div className={`sidebar-section ${collapsed.includes("range") ? "sidebar-collapsed" : ""}`}>
+          <div className="sidebar-heading sidebar-heading-row">
+            <button
+              className="sidebar-toggle"
+              onClick={() => toggleSection("range")}
+              aria-expanded={!collapsed.includes("range")}
+            >
+              <span className="sidebar-chevron">
+                <ChevronDown size={12} strokeWidth={2} />
+              </span>
+              <span>{t("side.range")}</span>
+            </button>
+          </div>
+          {!collapsed.includes("range") && (
+            <>
+              <FilterRow
+                label={t("side.rangeCjk")}
+                count={stats.cjk}
+                on={rangeFilter === "cjk"}
+                onClick={() => setRangeFilter("cjk")}
+              />
+              <FilterRow
+                label={t("side.rangeLatin")}
+                count={stats.latin}
+                on={rangeFilter === "latin"}
+                onClick={() => setRangeFilter("latin")}
+              />
+            </>
+          )}
+        </div>
+
+        <div className={`sidebar-section ${collapsed.includes("bookStyle") ? "sidebar-collapsed" : ""}`}>
+          <div className="sidebar-heading sidebar-heading-row">
+            <button
+              className="sidebar-toggle"
+              onClick={() => toggleSection("bookStyle")}
+              aria-expanded={!collapsed.includes("bookStyle")}
+            >
+              <span className="sidebar-chevron">
+                <ChevronDown size={12} strokeWidth={2} />
+              </span>
+              <span>{t("side.bookStyle")}</span>
+            </button>
+          </div>
+          {!collapsed.includes("bookStyle") && (
+            <div className="side-chip-grid">
+              {BOOK_STYLES.map((style) => (
+                <FilterChip
+                  key={style}
+                  label={t(`book.${style}`)}
+                  count={stats.book[style] ?? 0}
+                  on={bookFilter.includes(style)}
+                  onClick={() => toggleBookFilter(style)}
+                  disabled={!stats.book[style]}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className={`sidebar-section ${collapsed.includes("attrs") ? "sidebar-collapsed" : ""}`}>
+          <div className="sidebar-heading sidebar-heading-row">
+            <button
+              className="sidebar-toggle"
+              onClick={() => toggleSection("attrs")}
+              aria-expanded={!collapsed.includes("attrs")}
+            >
+              <span className="sidebar-chevron">
+                <ChevronDown size={12} strokeWidth={2} />
+              </span>
+              <span>{t("side.attrs")}</span>
+            </button>
+          </div>
+          {!collapsed.includes("attrs") && (
+            <div className="side-chip-grid">
+              <FilterChip
+                label={t("filter.variableShort")}
+                count={stats.variable}
+                on={variableOnly}
+                onClick={() => toggleSidebarAttribute("variable")}
+              />
+              <FilterChip
+                label={t("filter.multiStyle")}
+                count={stats.multiStyle}
+                on={multiStyleOnly}
+                onClick={() => toggleSidebarAttribute("multiStyle")}
+              />
+              <FilterChip
+                label={t("filter.monospace")}
+                count={stats.mono}
+                on={monospaceOn}
+                onClick={() => toggleSidebarAttribute("mono")}
+              />
+              <FilterChip
+                label={t("filter.bigCharset")}
+                count={stats.big}
+                on={bigCharsetOnly}
+                onClick={() => toggleSidebarAttribute("bigCharset")}
+              />
+            </div>
           )}
         </div>
 
@@ -447,21 +698,9 @@ export function Sidebar() {
 
       <div className="sidebar-footer">
         <NavRow
-          nav={{ kind: "usage" }}
-          icon={<BarChart3 size={15} strokeWidth={1.5} />}
-          label={t("side.usage")}
-          index={i++}
-        />
-        <NavRow
-          nav={{ kind: "duplicates" }}
-          icon={<Layers size={15} strokeWidth={1.5} />}
-          label={t("side.duplicates")}
-          index={i++}
-        />
-        <NavRow
-          nav={{ kind: "references" }}
-          icon={<FolderSearch size={15} strokeWidth={1.5} />}
-          label={t("side.references")}
+          nav={{ kind: "folders" }}
+          icon={<FolderCog size={15} strokeWidth={1.5} />}
+          label={t("side.folders")}
           index={i++}
         />
         <NavRow
@@ -471,44 +710,22 @@ export function Sidebar() {
           count={trash.length}
           index={i++}
         />
-        <NavRow
-          nav={{ kind: "folders" }}
-          icon={<FolderCog size={15} strokeWidth={1.5} />}
-          label={t("side.folders")}
-          index={i++}
-        />
-        <NavRow
-          nav={{ kind: "backup" }}
-          icon={<HardDriveDownload size={15} strokeWidth={1.5} />}
-          label={t("side.backup")}
-          index={i++}
-        />
-        <NavRow
-          nav={{ kind: "organize" }}
-          icon={<FolderTree size={15} strokeWidth={1.5} />}
-          label={t("side.organize")}
-          index={i++}
-        />
-        <NavRow
-          nav={{ kind: "about" }}
-          icon={<Info size={15} strokeWidth={1.5} />}
-          label={t("side.about")}
-          index={i++}
-        />
-
         <motion.button
           className="nav-row"
-          onClick={() => useFontStore.getState().setHelpOpen(true)}
+          onClick={openToolsMenu}
           initial={{ opacity: 0, x: -12 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ ...springSoft, delay: staggerDelay(i++) }}
           whileTap={{ scale: 0.97 }}
+          aria-haspopup="menu"
         >
           <span className="nav-icon">
-            <Keyboard size={15} strokeWidth={1.5} />
+            <MoreHorizontal size={15} strokeWidth={1.5} />
           </span>
-          <span className="nav-label">{t("side.shortcuts")}</span>
-          <kbd className="kbd nav-kbd">?</kbd>
+          <span className="nav-label">{t("side.moreTools")}</span>
+          <kbd className="kbd nav-kbd" title={t("side.shortcuts")}>
+            <Keyboard size={10} strokeWidth={1.8} />
+          </kbd>
         </motion.button>
       </div>
     </motion.aside>

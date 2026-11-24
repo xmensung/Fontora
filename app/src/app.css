@@ -130,7 +130,7 @@
   flex-direction: column;
   gap: 6px;
   padding: 12px 12px 14px;
-  border-right: 1px solid rgba(var(--ink-rgb), 0.05);
+  border-right: 1px solid var(--line-accent);
   background: rgba(var(--ink-rgb), 0.015);
   backdrop-filter: blur(24px) saturate(140%);
   -webkit-backdrop-filter: blur(24px) saturate(140%);
@@ -167,6 +167,126 @@
   margin-top: auto;
   border-top: 1px solid rgba(var(--ink-rgb), 0.05);
   padding-top: 8px;
+}
+
+/* ---- 侧栏筛选段 ----
+   导航行（去哪个页面）和筛选行（筛什么）用两种视觉：导航有图标、32px；
+   筛选无图标、28px、字略小。差别不需要标题去解释，身高自己会说。 */
+
+.side-filter {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  height: 28px;
+  padding: 0 11px;
+  border-radius: 5px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  transition: color var(--t-quick) ease, background var(--t-quick) ease;
+}
+.side-filter:hover:not(:disabled) {
+  background: var(--e1);
+  color: var(--text-primary);
+}
+.side-filter-on {
+  background: rgba(var(--accent-rgb), 0.12);
+  color: var(--accent-a);
+  font-weight: 500;
+}
+.side-filter:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+.side-filter-label {
+  flex: 1;
+  text-align: left;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.side-filter-count {
+  font-size: var(--fs-11);
+  color: var(--text-tertiary);
+}
+.side-filter-on .side-filter-count {
+  color: var(--accent-a);
+  opacity: 0.75;
+}
+
+.side-chip-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  padding: 2px 5px;
+}
+.side-chip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 3px;
+  height: 26px;
+  padding: 0 7px;
+  border: 1px solid rgba(var(--ink-rgb), 0.07);
+  border-radius: 5px;
+  font-size: var(--fs-11);
+  color: var(--text-secondary);
+  transition: color var(--t-quick) ease, border-color var(--t-quick) ease,
+    background var(--t-quick) ease;
+}
+.side-chip:hover:not(:disabled) {
+  border-color: rgba(var(--ink-rgb), 0.16);
+  color: var(--text-primary);
+}
+.side-chip-on {
+  background: rgba(var(--accent-rgb), 0.12);
+  border-color: rgba(var(--accent-rgb), 0.3);
+  color: var(--accent-a);
+  font-weight: 500;
+}
+.side-chip:disabled {
+  opacity: 0.32;
+  cursor: default;
+}
+.side-chip-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.side-chip-count {
+  font-size: 10px;
+  color: var(--text-tertiary);
+  flex-shrink: 0;
+}
+.side-chip-on .side-chip-count {
+  color: var(--accent-a);
+  opacity: 0.75;
+}
+
+.side-clearbar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 8px 5px 11px;
+  border-radius: 6px;
+  background: rgba(var(--accent-rgb), 0.1);
+  border: 1px solid rgba(var(--accent-rgb), 0.18);
+  font-size: var(--fs-11);
+  color: var(--text-secondary);
+}
+.side-clearbar-text {
+  flex: 1;
+  text-align: left;
+}
+.side-clearbar-btn {
+  font-size: var(--fs-11);
+  font-weight: 500;
+  color: var(--accent-a);
+  padding: 1px 4px;
+  border-radius: 3px;
+}
+.side-clearbar-btn:hover {
+  background: rgba(var(--accent-rgb), 0.16);
 }
 
 .nav-row {
@@ -261,8 +381,6 @@
   --control-h: 36px;
   gap: 10px;
   padding: 12px 20px;
-  border-bottom: 1px solid rgba(var(--ink-rgb), 0.05);
-  background: rgba(var(--ink-rgb), 0.01);
   z-index: 5;
 }
 
@@ -607,51 +725,57 @@
 .grid-scroll {
   height: 100%;
   overflow-y: auto;
-  padding: 24px 26px;
+  /* 卡片自己带左右内边距，外层不再留边，列表右端就不会空出一条灰带。
+     顶部也不留 —— 那 8px 会露出画布色，在白色工具条和白色卡片之间
+     多出一条横贯全屏的灰带。 */
+  padding: 0 0 20px;
 }
 .grid-row {
-  padding-bottom: 18px;
+  padding-bottom: 0;
 }
 
 .family-card {
   position: relative;
-  border-radius: 10px;
-  padding: 20px 22px;
+  padding: 12px 18px 13px;
   cursor: pointer;
-  background: linear-gradient(180deg, rgba(var(--ink-rgb), 0.05), rgba(var(--ink-rgb), 0.025));
-  border: 1px solid rgba(var(--ink-rgb), 0.07);
-  box-shadow:
-    inset 0 1px 0 var(--glass-top-highlight),
-    var(--shadow-ground),
-    0 12px 32px rgba(0, 0, 0, 0.18);
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid var(--line-accent);
+  border-radius: 0;
+  box-shadow: none;
   overflow: hidden;
   transition: filter var(--t-state) ease, opacity var(--t-state) ease,
-    border-color var(--t-quick) ease, box-shadow var(--t-state) ease;
+    background var(--t-quick) ease, border-color var(--t-quick) ease;
 }
 
 .family-card:hover {
-  border-color: rgba(var(--ink-rgb), 0.11);
-  box-shadow:
-    inset 0 1px 0 var(--glass-top-highlight-strong),
-    var(--shadow-ground),
-    var(--shadow-mass),
-    0 24px 56px rgba(0, 0, 0, 0.3);
+  background: rgba(var(--ink-rgb), 0.025);
+  border-bottom-color: var(--accent-a);
+  box-shadow: none;
 }
+/* 选中不再用整块背景 —— 色块会把左边距露出来，跟别的行对不齐。
+   换成贴左的一道竖条，边界一致，也少一层灰。 */
 .card-selected,
 .card-selected:hover {
-  border-color: color-mix(in srgb, var(--accent-a) 75%, transparent);
-  box-shadow:
-    inset 0 1px 0 var(--glass-top-highlight-strong),
-    0 0 0 1px color-mix(in srgb, var(--accent-a) 40%, transparent),
-    0 0 24px var(--accent-glow-soft),
-    var(--shadow-ground),
-    var(--shadow-ambient);
+  background: var(--select-tint);
+  border-bottom-color: var(--accent-a);
+  box-shadow: none;
+}
+.card-selected::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 6px;
+  bottom: 6px;
+  width: 2px;
+  border-radius: 0 2px 2px 0;
+  background: var(--accent-a);
 }
 
 .card-head {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
 }
 .card-name {
   font-size: var(--fs-14);
@@ -727,7 +851,7 @@
 }
 
 .card-preview {
-  padding-top: 16px;
+  padding-top: 8px;
   display: flex;
   align-items: center;
   overflow: hidden;
@@ -3295,7 +3419,6 @@ h2.detail-title.copy-name {
 
 .fd-page-inner {
   width: 100%;
-  max-width: 1040px;
   margin: 0 auto;
   padding: 0 34px 64px;
 }
@@ -3802,16 +3925,31 @@ h2.detail-title.copy-name {
   color: var(--text-tertiary);
 }
 
+/* 覆盖率：条目本身就是网格单元（分组只做视觉归属，用 display: contents 展平），
+   每格两三百像素，宽屏自然多列，不会拉成一条横贯全屏的长线。 */
 .fd-cov-columns {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 26px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
   margin-top: 16px;
 }
 
+.fd-cov-groups {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  column-gap: 30px;
+  row-gap: 0;
+  align-items: start;
+}
+
+.fd-cov-group {
+  display: contents;
+}
+
 .fd-col-head {
+  grid-column: 1 / -1;
   padding-bottom: 7px;
-  margin-bottom: 6px;
+  margin-bottom: 4px;
   border-bottom: 1px solid rgba(var(--ink-rgb), 0.08);
   font-size: var(--fs-11);
   font-weight: 600;
@@ -3819,11 +3957,9 @@ h2.detail-title.copy-name {
   color: var(--text-secondary);
 }
 
-.fd-cov-group {
-  margin-bottom: 12px;
-}
 .fd-cov-group-head {
-  margin: 8px 0 2px;
+  grid-column: 1 / -1;
+  margin: 12px 0 2px;
   font-size: var(--fs-10);
   letter-spacing: 0.05em;
   color: var(--text-tertiary);
@@ -3985,7 +4121,6 @@ h2.detail-title.copy-name {
   .fd-page-inner {
     padding: 4px 20px 48px;
   }
-  .fd-cov-columns,
   .fd-lists {
     grid-template-columns: 1fr;
   }
@@ -6902,10 +7037,13 @@ h2.detail-title.copy-name {
 
 /* ---- 缺字 ---- */
 .glyph-missing {
-  color: var(--error);
-  background: color-mix(in srgb, var(--error) 13%, transparent);
-  border-radius: 2px;
-  box-shadow: inset 0 -1px 0 color-mix(in srgb, var(--error) 55%, transparent);
+  /* 缺字一律交给界面字体兜底。有些字体 cmap 里挂着码位、字形却是空的，
+     不换字体就是一片空白，混在句子里像一团墨点。 */
+  font-family: var(--font-ui);
+  color: color-mix(in srgb, var(--error) 65%, var(--text-secondary));
+  text-decoration: underline dashed color-mix(in srgb, var(--error) 40%, transparent);
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
 }
 .card-missing {
   align-self: flex-start;
@@ -6937,77 +7075,6 @@ h2.detail-title.copy-name {
   width: auto;
   margin-left: auto;
   text-align: right;
-}
-
-/* ---- 详情页 OpenType 特性 ---- */
-.fd-feat-tools {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-.fd-feat-count {
-  font-size: var(--fs-11);
-  color: var(--accent-a);
-}
-.fd-feat-reset {
-  font-size: var(--fs-11);
-  color: var(--text-tertiary);
-  padding: 2px 8px;
-  border-radius: 5px;
-  border: 1px solid rgba(var(--ink-rgb), 0.1);
-  transition: color var(--t-quick) ease, border-color var(--t-quick) ease;
-}
-.fd-feat-reset:hover {
-  color: var(--text-primary);
-  border-color: rgba(var(--ink-rgb), 0.2);
-}
-.fd-feats {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin: 10px 0 14px;
-}
-.fd-feat {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px 9px;
-  border-radius: 6px;
-  font-size: var(--fs-11);
-  color: var(--text-secondary);
-  background: rgba(var(--ink-rgb), 0.04);
-  border: 1px solid rgba(var(--ink-rgb), 0.08);
-  transition: background var(--t-quick) ease, color var(--t-quick) ease,
-    border-color var(--t-quick) ease;
-}
-.fd-feat:hover {
-  background: rgba(var(--ink-rgb), 0.08);
-  color: var(--text-primary);
-}
-.fd-feat.on {
-  color: var(--accent-a);
-  background: color-mix(in srgb, var(--accent-a) 12%, transparent);
-  border-color: color-mix(in srgb, var(--accent-a) 42%, transparent);
-}
-.fd-feat-name {
-  line-height: 1;
-}
-.fd-feat-tag {
-  font-size: var(--fs-10);
-  color: var(--text-tertiary);
-  letter-spacing: 0.04em;
-}
-.fd-feat.on .fd-feat-tag {
-  color: var(--accent-a);
-}
-.fd-feat-sample {
-  padding: 18px 20px;
-  border-radius: 8px;
-  font-size: 30px;
-  line-height: 1.45;
-  background: rgba(var(--ink-rgb), 0.03);
-  border: 1px solid rgba(var(--ink-rgb), 0.07);
-  overflow-x: auto;
 }
 
 /* ---- 对比：模式切换 ---- */
@@ -7141,4 +7208,118 @@ h2.detail-title.copy-name {
 .compare-hint {
   font-size: var(--fs-11);
   color: var(--text-tertiary);
+}
+
+/* ── 官方样张：字体目录 `预览/` 里的图片 ───────────────────────────── */
+.fd-preview-count {
+  font-size: var(--fs-11);
+  color: var(--text-tertiary);
+  font-family: var(--font-mono);
+}
+
+.fd-previews {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(176px, 1fr));
+  gap: 12px;
+}
+
+.fd-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: 0;
+  border: 1px solid var(--glass-border);
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--e1);
+  cursor: zoom-in;
+  transition:
+    border-color 0.16s ease,
+    transform 0.16s ease;
+}
+.fd-preview:hover {
+  border-color: rgba(var(--accent-rgb), 0.45);
+  transform: translateY(-1px);
+}
+.fd-preview img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: contain;
+  background: var(--e0);
+}
+.fd-preview-name {
+  padding: 6px 9px 7px;
+  border-top: 1px solid rgba(var(--ink-rgb), 0.06);
+  font-size: var(--fs-10);
+  color: var(--text-secondary);
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-family: var(--font-mono);
+}
+
+.fd-preview-veil {
+  position: fixed;
+  inset: 0;
+  z-index: 210;
+  display: grid;
+  place-items: center;
+  padding: 28px;
+  background: rgba(var(--scrim-rgb), 0.82);
+  backdrop-filter: blur(6px);
+}
+
+.fd-preview-stage {
+  display: flex;
+  flex-direction: column;
+  max-width: min(1100px, 92vw);
+  max-height: 90vh;
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--canvas);
+  box-shadow: var(--shadow-ambient);
+}
+.fd-preview-stage img {
+  display: block;
+  max-width: min(1100px, 92vw);
+  max-height: calc(90vh - 44px);
+  object-fit: contain;
+}
+.fd-preview-stage figcaption {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 12px;
+  border-top: 1px solid var(--glass-border);
+  font-size: var(--fs-11);
+  color: var(--text-secondary);
+}
+.fd-preview-caption-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--font-mono);
+}
+.fd-preview-close {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  color: var(--text-secondary);
+}
+.fd-preview-close:hover {
+  background: var(--e3);
+  color: var(--text-primary);
+}
+
+/* 空字形字体改用名字预览时的小标记：是提示，不是错误 */
+.card-hint {
+  color: var(--text-tertiary);
+  background: var(--e2);
+  border-color: rgba(var(--ink-rgb), 0.09);
 }

@@ -738,7 +738,16 @@ fn get_charset(path: String, face_index: u32) -> Result<Vec<u32>, String> {
 
 /// Everything the detail page renders, read straight from the font file.
 #[tauri::command]
-async fn font_detail(path: String, face_index: u32) -> Result<font_detail::FontDetail, String> {
+async fn font_detail(
+    app: tauri::AppHandle,
+    path: String,
+    face_index: u32,
+) -> Result<font_detail::FontDetail, String> {
+    // 样张是磁盘上的图片，webview 要用 asset 协议才显示得出来；
+    // 库目录是用户自己加的，只能运行时放行。
+    if let Some(dir) = std::path::Path::new(&path).parent() {
+        let _ = app.asset_protocol_scope().allow_directory(dir, true);
+    }
     tauri::async_runtime::spawn_blocking(move || font_detail::build(&path, face_index))
         .await
         .map_err(|e| e.to_string())?
@@ -1553,6 +1562,11 @@ pub fn run() {
     activation::reconcile(&mut state);
 
     let watch_enabled = state.watch_enabled;
+    let start_minimized = state
+        .prefs
+        .get("startMinimized")
+        .and_then(|v| v.as_bool())
+        .unwrap_or(false);
     let ui_scale_pref = state
         .prefs
         .get("uiScale")
@@ -1597,6 +1611,25 @@ pub fn run() {
                 }
             }
             let tray_ok = build_tray(app.handle()).is_ok();
+            // 窗口在 tauri.conf.json 里以 visible:false 起步，好让用户第一眼
+            // 看到的是画好的界面而不是白底。正常由前端就绪后调用 show；但
+            // 冷启动时 WebView2 光是把前端脚本跑起来就可能要几秒，这段时间
+            // 窗口一直不显示，用户只看得见托盘图标，以为程序没启动。
+            //
+            // 这里 1.2 秒就把窗口亮出来 —— index.html 里自带一个启动画面，
+            // 所以露出来的不会是一块白底，而是「FONTORA + 一条走动的进度线」。
+            // 前端就绪后 React 接管，画面自然消失。
+            if !start_minimized {
+                if let Some(window) = app.get_webview_window("main") {
+                    std::thread::spawn(move || {
+                        std::thread::sleep(std::time::Duration::from_millis(1200));
+                        if !window.is_visible().unwrap_or(false) {
+                            let _ = window.show();
+                            let _ = window.set_focus();
+                        }
+                    });
+                }
+            }
             if let Some(window) = app.get_webview_window("main") {
                 let handle = app.handle().clone();
                 window.on_window_event(move |event| {

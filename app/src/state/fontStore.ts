@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { listen } from "@tauri-apps/api/event";
+import { getCurrentWindow } from "@tauri-apps/api/window";
 import {
   ipc,
   type AdobeApp,
@@ -16,7 +17,7 @@ import {
   type UsageRow,
 } from "../lib/ipc";
 import { matchAffinityFonts, type AffinityEvent } from "../lib/affinity";
-import { bookStyleOf, type BookStyle } from "../lib/bookStyle";
+import { bookStyleOf, isChinese, type BookStyle } from "../lib/bookStyle";
 import { toast } from "../design/primitives/Toast";
 import { setSoundLevel, type SoundLevel } from "../lib/sound";
 import { applySkin, applyTheme, type SkinPref, type ThemePref } from "../lib/theme";
@@ -31,6 +32,8 @@ import {
 
 export const SIZES = [8, 14, 18, 24, 32, 48, 64, 96] as const;
 
+const LEGACY_DEFAULT_SAMPLE = "The quick brown fox jumps over the lazy dog";
+
 // init() subscribes to backend events; React StrictMode runs the mounting
 // effect twice in dev, so guard it — a second run would attach every
 // listener twice and each toast would appear twice.
@@ -44,6 +47,12 @@ export type SortMode = "name" | "styles" | "size" | "glyphs" | "recent" | "added
 
 /** 评分筛选：全部 / 四星及以上 / 还没评分。 */
 export type RatingFilter = "all" | "top" | "none";
+
+/** 字体范围：全部 / 中文 / 西文。 */
+export type RangeFilter = "all" | "cjk" | "latin";
+
+/** 侧栏「字体特征」四项互斥；再点当前项恢复不限。 */
+export type SidebarAttribute = "variable" | "multiStyle" | "mono" | "bigCharset";
 
 /** 使用统计的三类事件。 */
 export type UsageKind = "view" | "install" | "reference";
@@ -173,8 +182,18 @@ interface FontStore {
   pinyinKeys: Record<string, string[]>;
   /** 评分筛选：全部 / 四星以上 / 没评分。 */
   ratingFilter: RatingFilter;
-  /** 中文书体筛选（黑/宋/楷/仿宋/圆/隶/篆/行草/其他），空数组＝不限。 */
+  /** 中文书体筛选：同组单选，空数组＝不限。保留数组形状以兼容既有筛选管线。 */
   bookFilter: BookStyle[];
+  /**
+   * 字体范围：中文 / 西文。单选语义 —— 侧栏两个条目互斥，再点一次复位。
+   * 与 `scriptFilter` 分开：那个按 OpenType 的 script 标签多选（含日韩阿印），
+   * 这里的「中文」按有没有汉字覆盖判，更贴近用户口中的「中文字体」。
+   */
+  rangeFilter: RangeFilter;
+  /** 只看有多个字面（Regular/Bold/Light…）的家族。 */
+  multiStyleOnly: boolean;
+  /** 只看字形数超过 2 万的家族（能做正文排版的那批）。 */
+  bigCharsetOnly: boolean;
   /** 当前预览文本用的是哪套预设（null = 用户自己敲的）。 */
   samplePreset: string | null;
   /** 自定义预览文本历史（最近 10 条，新的在前）。 */
@@ -278,7 +297,13 @@ interface FontStore {
   setVertical: (on: boolean) => void;
   setMissingOnly: (on: boolean) => void;
   toggleBookFilter: (style: BookStyle) => void;
+  /** 侧栏「字体特征」同组单选，不影响顶栏的其他分类条件。 */
+  toggleSidebarAttribute: (attr: SidebarAttribute) => void;
   clearBookFilter: () => void;
+  /** 范围是单选：再点当前项即复位成全选。 */
+  setRangeFilter: (range: RangeFilter) => void;
+  setMultiStyleOnly: (on: boolean) => void;
+  setBigCharsetOnly: (on: boolean) => void;
   refreshGlyphs: (force?: boolean) => Promise<void>;
   setSizeIndex: (i: number) => void;
   setViewMode: (m: ViewMode) => void;
@@ -402,6 +427,9 @@ export const useFontStore = create<FontStore>((set, get) => ({
   glyphScope: "",
   glyphLoading: false,
   bookFilter: [],
+  rangeFilter: "all",
+  multiStyleOnly: false,
+  bigCharsetOnly: false,
   viewMode: "grid",
   sort: "name",
   search: "",
@@ -446,7 +474,11 @@ export const useFontStore = create<FontStore>((set, get) => ({
     try {
       const prefs = (await ipc.getPrefs()) ?? {};
       set({
-        sampleText: typeof prefs.sampleText === "string" ? prefs.sampleText : get().sampleText,
+        // 只迁移旧版默认句；用户自己输入或选择过的预览文字原样保留。
+        sampleText:
+          typeof prefs.sampleText === "string" && prefs.sampleText !== LEGACY_DEFAULT_SAMPLE
+            ? prefs.sampleText
+            : get().sampleText,
         sizeIndex: typeof prefs.sizeIndex === "number" ? prefs.sizeIndex : get().sizeIndex,
         samplePreset: typeof prefs.samplePreset === "string" ? prefs.samplePreset : null,
         sampleHistory: Array.isArray(prefs.sampleHistory)
@@ -497,6 +529,9 @@ export const useFontStore = create<FontStore>((set, get) => ({
     } catch {
 
     }
+    // 窗口是 visible:false 起的。偏好一读完就亮窗口——首次启动真正耗时的是
+    // 后面的字体全量解析，不能让它把整个界面一起扣住不显示。
+    if (!get().startMinimized) void getCurrentWindow().show();
     applyTheme(get().themePref);
     applySkin(get().skinPref);
     applyMotionPref(get().motionPref);
@@ -1370,11 +1405,35 @@ export const useFontStore = create<FontStore>((set, get) => ({
   },
   toggleBookFilter: (style) => {
     const cur = get().bookFilter;
+    set({ bookFilter: cur.includes(style) ? [] : [style] });
+  },
+  toggleSidebarAttribute: (attr) => {
+    const s = get();
+    const active =
+      attr === "variable"
+        ? s.variableOnly
+        : attr === "multiStyle"
+          ? s.multiStyleOnly
+          : attr === "bigCharset"
+            ? s.bigCharsetOnly
+            : s.classFilter.includes("mono");
+    const on = !active;
     set({
-      bookFilter: cur.includes(style) ? cur.filter((x) => x !== style) : [...cur, style],
+      variableOnly: attr === "variable" && on,
+      multiStyleOnly: attr === "multiStyle" && on,
+      bigCharsetOnly: attr === "bigCharset" && on,
+      classFilter: [
+        ...s.classFilter.filter((c) => c !== "mono"),
+        ...(attr === "mono" && on ? (["mono"] as const) : []),
+      ],
     });
   },
   clearBookFilter: () => set({ bookFilter: [] }),
+  setRangeFilter: (range) => {
+    set({ rangeFilter: get().rangeFilter === range ? "all" : range });
+  },
+  setMultiStyleOnly: (multiStyleOnly) => set({ multiStyleOnly }),
+  setBigCharsetOnly: (bigCharsetOnly) => set({ bigCharsetOnly }),
   refreshGlyphs: async (force = false) => {
     const s = get();
     const text = s.sampleText.trim();
@@ -1828,6 +1887,9 @@ export function selectVisibleFamilies(s: {
   classFilter: Classification[];
   scriptFilter: string[];
   bookFilter: BookStyle[];
+  rangeFilter: RangeFilter;
+  multiStyleOnly: boolean;
+  bigCharsetOnly: boolean;
   tagFilter: string[];
   untaggedOnly: boolean;
   formatFilter: FontFormat[];
@@ -1854,7 +1916,13 @@ export function selectVisibleFamilies(s: {
   if (s.scriptFilter.length > 0) {
     out = out.filter((f) => s.scriptFilter.every((sc) => f.scripts.includes(sc)));
   }
-  // 中文书体：多选为 OR。判不出来（西文字体 / 名字里没线索的中文）的不进任何桶，
+  // 范围与 scriptFilter 是两个维度：这里按「有没有汉字覆盖」判，不看 script 标签。
+  if (s.rangeFilter === "cjk") {
+    out = out.filter((f) => isChinese(f));
+  } else if (s.rangeFilter === "latin") {
+    out = out.filter((f) => !isChinese(f));
+  }
+  // 中文书体：同组单选。判不出来（西文字体 / 名字里没线索的中文）的不进任何桶，
   // 勾了「其他」才出现，否则用户会以为筛选坏了。
   if (s.bookFilter.length > 0) {
     out = out.filter((f) => {
@@ -1883,6 +1951,12 @@ export function selectVisibleFamilies(s: {
   }
   if (s.toggleableOnly) {
     out = out.filter((f) => f.deactivatable);
+  }
+  if (s.multiStyleOnly) {
+    out = out.filter((f) => f.faces.length > 1);
+  }
+  if (s.bigCharsetOnly) {
+    out = out.filter((f) => f.faces.some((x) => x.glyphCount >= 20000));
   }
   if (s.ratingFilter === "top") {
     out = out.filter((f) => (s.ratings[f.name] ?? 0) >= 4);
